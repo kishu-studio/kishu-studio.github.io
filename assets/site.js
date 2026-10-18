@@ -1,294 +1,307 @@
-// Kishu Studio: smooth scrolling, reveals, live clocks, cursor, and the particle field
-// that draws the logo and each service as you scroll.
+// Kishu Studio · smooth scrolling, header, reveals, and a particle field that draws a shape
+// for each section. Shapes are tied to anchor elements in the page, so they scroll with the content.
 (function () {
+  'use strict';
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  var header = document.getElementById('top');
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
-  // ── Smooth scrolling (Lenis); native scrolling if the CDN is unavailable ──
+  // ── Contact details and placeholders ──
+  var wa = (window.WHATSAPP || '').replace(/\D/g, '');
+  $$('[data-wa]').forEach(function (a) {
+    if (wa.length >= 8) { a.href = 'https://wa.me/' + wa + '?text=' + encodeURIComponent('Hi Yash, I found Kishu Studio and would like a fixed price for: '); a.target = '_blank'; a.rel = 'noopener'; }
+    else a.hidden = true;
+  });
+  $$('[data-ph]').forEach(function (el) { if (/FI-BUSINESS-ID|UDYAM-NO/.test(el.textContent)) el.hidden = true; });
+
+  // ── Price view: India visitors see INR first ──
+  var btns = $$('.switch button'), panels = $$('[data-panel]');
+  function showCur(cur) {
+    btns.forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-cur') === cur ? 'true' : 'false'); });
+    panels.forEach(function (p) { p.hidden = p.getAttribute('data-panel') !== cur; });
+  }
+  btns.forEach(function (b) { b.addEventListener('click', function () { showCur(b.getAttribute('data-cur')); }); });
+  try { if (/Asia\/(Kolkata|Calcutta)/.test(Intl.DateTimeFormat().resolvedOptions().timeZone)) showCur('in'); } catch (e) {}
+
+  // ── Company details toggle ──
+  var hc = $('.hc-toggle'), company = $('#company');
+  if (hc) hc.addEventListener('click', function () { var open = company.hidden; company.hidden = !open; hc.setAttribute('aria-expanded', String(open)); });
+
+  // ── Smooth scrolling ──
   var lenis = null;
   if (!reduce && window.Lenis) {
-    lenis = new Lenis({ duration: 1.2, easing: function (t) { return Math.min(1, 1.001 - Math.pow(2, -10 * t)); } });
+    lenis = new Lenis({ duration: 1.25, easing: function (t) { return Math.min(1, 1.001 - Math.pow(2, -10 * t)); } });
     (function raf(t) { lenis.raf(t); requestAnimationFrame(raf); })(0);
   }
-  document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+  $$('a[href^="#"]').forEach(function (a) {
     a.addEventListener('click', function (e) {
-      var id = a.getAttribute('href'), el = id === '#main' ? null : document.querySelector(id);
+      var id = a.getAttribute('href'); if (id.length < 2) return;
+      var el = id === '#main' ? null : $(id);
       if (id !== '#main' && !el) return;
       e.preventDefault();
-      if (lenis) lenis.scrollTo(el || 0, { offset: -72 });
-      else window.scrollTo({ top: el ? el.getBoundingClientRect().top + window.scrollY - 72 : 0, behavior: reduce ? 'auto' : 'smooth' });
+      if (lenis) lenis.scrollTo(el || 0, { offset: -20 });
+      else window.scrollTo({ top: el ? el.getBoundingClientRect().top + scrollY - 20 : 0, behavior: reduce ? 'auto' : 'smooth' });
     });
-  });
-
-  // ── Headings rise word by word ──
-  document.querySelectorAll('[data-split]').forEach(function (h) {
-    var parts = h.innerHTML.split(/(<br>|<em>|<\/em>|\s+)/), out = '', i = 0;
-    parts.forEach(function (part) {
-      if (!part) return;
-      if (/^\s+$/.test(part)) { out += ' '; return; }
-      if (part === '<br>' || part === '<em>' || part === '</em>') { out += part; return; }
-      out += '<span class="w"><span style="transition-delay:' + (i++ * 55) + 'ms">' + part + '</span></span>';
-    });
-    h.innerHTML = out;
   });
 
   // ── Reveal on scroll ──
-  var rv = document.querySelectorAll('.rv,[data-split]');
+  var rv = $$('.rv');
   if ('IntersectionObserver' in window && !reduce) {
-    var io = new IntersectionObserver(function (es) {
-      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
-    }, { rootMargin: '0px 0px -8% 0px' });
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { rootMargin: '0px 0px -8% 0px' });
     rv.forEach(function (el) { io.observe(el); });
   } else rv.forEach(function (el) { el.classList.add('in'); });
 
-  // ── Live clocks: the studio works on Helsinki and India time ──
-  function clock(tz) {
-    try { return new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date()); }
-    catch (e) { return ''; }
-  }
-  function tick() { document.querySelectorAll('[data-tz]').forEach(function (el) { el.textContent = clock(el.getAttribute('data-tz')); }); }
-  tick(); setInterval(tick, 15000);
-
-  // ── Custom cursor (mouse and trackpad only) ──
-  var cur = document.getElementById('cursor');
-  var mx = -100, my = -100, cx = -100, cy = -100;
-  if (cur && finePointer && !reduce) {
-    document.documentElement.classList.add('has-cursor');
-    window.addEventListener('mousemove', function (e) { mx = e.clientX; my = e.clientY; }, { passive: true });
-    document.addEventListener('mouseover', function (e) { cur.classList.toggle('is-link', !!e.target.closest('a,button,label,input,textarea')); });
-    (function loop() {
-      cx += (mx - cx) * 0.22; cy += (my - cy) * 0.22;
-      cur.style.transform = 'translate3d(' + cx + 'px,' + cy + 'px,0)';
-      requestAnimationFrame(loop);
-    })();
+  // ── Header: solid after the top, hidden while scrolling down ──
+  var header = $('#site-header'), lastY = scrollY;
+  function headerCheck() {
+    var y = scrollY;
+    header.classList.toggle('is-scrolled', y > 30);
+    if (y > 200 && y > lastY + 4) header.classList.add('site-header--hidden');
+    else if (y < lastY - 4 || y < 200) header.classList.remove('site-header--hidden');
+    lastY = y;
   }
 
-  // ── Particle field ─────────────────────────────────────────────────
-  var canvas = document.getElementById('field');
-  var ctx = canvas.getContext('2d');
-  var W = window.innerWidth, H = window.innerHeight, DPR = 1, N = 0, parts = [];
-  var logoImg = new Image(), logoReady = false;
-  var ghost = { img: null, x: 0, y: 0, a: 0, target: 0 };   // faint filled shape behind the particles
+  // ════════════════════════ particle field ════════════════════════
+  var back = $('.field-back'), front = $('.field-front');
+  var cb = back.getContext('2d'), cf = front.getContext('2d');
+  var W, H, DPR, parts = [];
   var mouse = { x: -9999, y: -9999 };
-  var lastScroll = window.scrollY, scrollVel = 0;
-  var currentShape = 'logo';
-
+  var scene = 'hero', icon = 'sheet', shape = null;   // shape: { name, anchor, pts, dyn }
+  var vel = 0, lastScroll = scrollY;
   function rnd(a, b) { return a + Math.random() * (b - a); }
+  function gauss() { return (Math.random() + Math.random() + Math.random() - 1.5) / 1.5; }
 
-  // Pre-rendered glow sprites: warm white with a soft edge. Drawing images is much cheaper than gradients per frame.
-  function sprite(r, core, rgb) {
-    var c = document.createElement('canvas'), s = Math.ceil(r * 4);
-    c.width = c.height = s;
-    var g = c.getContext('2d'), grd = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
-    grd.addColorStop(0, 'rgba(' + rgb + ',1)');
-    grd.addColorStop(core, 'rgba(' + rgb + ',0.9)');
-    grd.addColorStop(Math.min(core * 2.4, 0.9), 'rgba(' + rgb + ',0.16)');
-    grd.addColorStop(1, 'rgba(' + rgb + ',0)');
-    g.fillStyle = grd; g.fillRect(0, 0, s, s);
-    return c;
+  // glow sprites, warm ivory like the text
+  function sprite(px, core, rgb) {
+    var c = document.createElement('canvas'); c.width = c.height = px;
+    var g = c.getContext('2d'), r = px / 2, gr = g.createRadialGradient(r, r, 0, r, r, r);
+    gr.addColorStop(0, 'rgba(' + rgb + ',1)'); gr.addColorStop(core, 'rgba(' + rgb + ',.95)');
+    gr.addColorStop(Math.min(.95, core * 2.6), 'rgba(' + rgb + ',.22)'); gr.addColorStop(1, 'rgba(' + rgb + ',0)');
+    g.fillStyle = gr; g.fillRect(0, 0, px, px); return c;
   }
-  var SPR = {
-    dust: sprite(1.4, 0.38, '236,234,228'),
-    mid: sprite(3.2, 0.18, '246,238,220'),
-    bokeh: sprite(7, 0.08, '255,236,205'),
-    red: sprite(5, 0.3, '255,68,51')
-  };
+  var SPR = { dust: sprite(16, .22, '245,238,220'), mid: sprite(32, .16, '250,240,218'), bokeh: sprite(64, .1, '255,236,206'), red: sprite(32, .3, '214,46,66') };
 
-  // Draw a shape on an offscreen canvas; return the canvas and its sampled points
-  function drawShape(name, bw, bh) {
-    var off = document.createElement('canvas'); off.width = bw; off.height = bh;
-    var c = off.getContext('2d');
-    c.strokeStyle = c.fillStyle = '#fff'; c.lineCap = c.lineJoin = 'round';
-    var u = Math.min(bw, bh), lw = Math.max(3, u * 0.02);
-    c.lineWidth = lw;
-    var cx = bw / 2, cy = bh / 2;
-    if (name === 'logo') {
-      if (!logoReady) return null;
-      var s = Math.min(bw / logoImg.width, bh / logoImg.height), lw2 = logoImg.width * s, lh2 = logoImg.height * s;
-      c.drawImage(logoImg, (bw - lw2) / 2, (bh - lh2) / 2, lw2, lh2);
-    } else if (name === 'scrape') {            // a spreadsheet: frame, filled header row, grid, a few filled cells
-      var x0 = bw * 0.1, y0 = bh * 0.16, gw = bw * 0.8, gh = bh * 0.68, rh = gh / 7, cw = gw / 4;
-      c.strokeRect(x0, y0, gw, gh);
-      c.fillRect(x0, y0, gw, rh);
-      for (var i = 2; i < 7; i++) { c.beginPath(); c.moveTo(x0, y0 + rh * i); c.lineTo(x0 + gw, y0 + rh * i); c.stroke(); }
-      for (var j = 1; j < 4; j++) { c.beginPath(); c.moveTo(x0 + cw * j, y0); c.lineTo(x0 + cw * j, y0 + gh); c.stroke(); }
-      [[0, 2], [1, 3], [2, 1], [3, 4], [1, 5], [0, 6]].forEach(function (p) { c.fillRect(x0 + cw * p[0] + cw * 0.18, y0 + rh * p[1] + rh * 0.35, cw * 0.5, rh * 0.3); });
-    } else if (name === 'automate') {          // three sources wired into one step, then out
-      c.beginPath();
-      [0.2, 0.5, 0.8].forEach(function (ny) { c.moveTo(bw * 0.16, bh * ny); c.bezierCurveTo(bw * 0.34, bh * ny, bw * 0.32, bh * 0.5, bw * 0.5, bh * 0.5); });
-      c.moveTo(bw * 0.5, bh * 0.5); c.lineTo(bw * 0.84, bh * 0.5); c.stroke();
-      [[0.16, 0.2, 0.05], [0.16, 0.5, 0.05], [0.16, 0.8, 0.05], [0.84, 0.5, 0.06]].forEach(function (n) { c.beginPath(); c.arc(bw * n[0], bh * n[1], u * n[2], 0, 6.283); c.fill(); });
-      c.beginPath(); c.arc(bw * 0.5, bh * 0.5, u * 0.11, 0, 6.283); c.stroke();
-      c.beginPath(); c.arc(bw * 0.5, bh * 0.5, u * 0.05, 0, 6.283); c.fill();
-    } else if (name === 'speed') {             // a gauge with the needle near the top of the scale
-      var r = u * 0.38, gy = cy + r * 0.28;
-      c.lineWidth = lw * 1.5;
-      c.beginPath(); c.arc(cx, gy, r, Math.PI * 0.82, Math.PI * 2.18); c.stroke();
-      c.lineWidth = lw;
-      for (var t = 0; t <= 20; t++) {
-        var a = Math.PI * (0.82 + 1.36 * t / 20), r1 = r * (t % 5 ? 0.86 : 0.76), r2 = r * 0.93;
-        c.beginPath(); c.moveTo(cx + Math.cos(a) * r1, gy + Math.sin(a) * r1); c.lineTo(cx + Math.cos(a) * r2, gy + Math.sin(a) * r2); c.stroke();
-      }
-      var na = Math.PI * 1.92;
-      c.lineWidth = lw * 1.3;
-      c.beginPath(); c.moveTo(cx, gy); c.lineTo(cx + Math.cos(na) * r * 0.7, gy + Math.sin(na) * r * 0.7); c.stroke();
-      c.beginPath(); c.arc(cx, gy, u * 0.045, 0, 6.283); c.fill();
-    } else if (name === 'build') {             // stacked layers
-      for (var L = 0; L < 3; L++) {
-        var y = bh * (0.3 + L * 0.18), w = bw * 0.36, h = bh * 0.14;
-        c.beginPath(); c.moveTo(cx, y - h); c.lineTo(cx + w, y); c.lineTo(cx, y + h); c.lineTo(cx - w, y); c.closePath(); c.stroke();
-      }
-    } else if (name === 'steps') {             // four points on a line: the method
-      c.beginPath(); c.moveTo(bw * 0.1, cy); c.lineTo(bw * 0.9, cy); c.stroke();
-      for (var q = 0; q < 4; q++) {
-        c.beginPath(); c.arc(bw * (0.1 + q * 0.8 / 3), cy, u * 0.075, 0, 6.283); c.stroke();
-        c.beginPath(); c.arc(bw * (0.1 + q * 0.8 / 3), cy, u * 0.03, 0, 6.283); c.fill();
-      }
-    } else if (name === 'talk') {              // a speech bubble
-      var bx = bw * 0.16, by = bh * 0.16, bW = bw * 0.68, bH = bh * 0.5, rr = u * 0.1;
-      c.beginPath(); c.moveTo(bx + rr, by); c.arcTo(bx + bW, by, bx + bW, by + bH, rr); c.arcTo(bx + bW, by + bH, bx, by + bH, rr);
-      c.lineTo(bx + bW * 0.34, by + bH); c.lineTo(bx + bW * 0.18, by + bH + bh * 0.18); c.lineTo(bx + bW * 0.2, by + bH);
-      c.arcTo(bx, by + bH, bx, by, rr); c.arcTo(bx, by, bx + bW, by, rr); c.closePath(); c.stroke();
-      for (var d = 0; d < 3; d++) { c.beginPath(); c.arc(bx + bW * (0.3 + d * 0.2), by + bH * 0.5, u * 0.035, 0, 6.283); c.fill(); }
-    } else return null;
-    var data = c.getImageData(0, 0, bw, bh).data, pts = [], step = Math.max(2, Math.round(u / (name === 'logo' ? 210 : 170)));
-    for (var py = 0; py < bh; py += step) for (var px = 0; px < bw; px += step) if (data[(py * bw + px) * 4 + 3] > 110) pts.push([px, py]);
-    return { canvas: off, pts: pts };
-  }
-
-  // Where a shape sits: the logo between header and hero text; section shapes on the right (desktop) or at the top (mobile)
-  function box(name) {
-    var wide = W > 960;
-    if (name === 'logo') {
-      var label = document.querySelector('.hero__label');
-      var bottom = label ? label.getBoundingClientRect().top + window.scrollY - 36 : H * 0.5;
-      var topY = 104, h = Math.max(90, Math.min(bottom - topY, H * 0.5));
-      return { x: W * (wide ? 0.07 : 0.06), y: topY, w: W * (wide ? 0.86 : 0.88), h: h };
+  // ── shape sources: each returns points normalised to its anchor box (0..1) ──
+  var cache = {};
+  function sampleCanvas(c, w, h, test, step) {
+    var d = c.getContext('2d').getImageData(0, 0, w, h).data, pts = [];
+    for (var y = 0; y < h; y += step) for (var x = 0; x < w; x += step) {
+      var i = (y * w + x) * 4; if (test(d[i], d[i + 1], d[i + 2], d[i + 3])) pts.push([x / w, y / h]);
     }
-    return wide ? { x: W * 0.55, y: H * 0.2, w: W * 0.36, h: H * 0.54 } : { x: W * 0.16, y: H * 0.09, w: W * 0.68, h: H * 0.24 };
+    return pts;
+  }
+  function canvasFor(w, h, draw) {
+    var c = document.createElement('canvas'); c.width = w; c.height = h;
+    var g = c.getContext('2d'); g.fillStyle = g.strokeStyle = '#fff'; g.lineCap = g.lineJoin = 'round';
+    draw(g, w, h); return c;
+  }
+  var white = function (r, g, b, a) { return a > 140 && r > 150; };
+  var logoImg = new Image(); logoImg.src = '/assets/logo-white.svg';
+  var SHAPES = {
+    logo: function () {
+      if (!logoImg.complete || !logoImg.naturalWidth) return null;
+      var w = 900, h = Math.round(900 * 642 / 2400);
+      var c = canvasFor(w, h, function (g) { g.drawImage(logoImg, 0, 0, w, h); });
+      return sampleCanvas(c, w, h, white, 3);   // white "Kishu" only, so "Studio" stays cut out
+    },
+    sheet: function () {
+      return sampleCanvas(canvasFor(436, 400, function (g) {
+        g.lineWidth = 7; var x = 26, y = 60, gw = 384, gh = 280, rh = gh / 7, cw = gw / 4;
+        g.strokeRect(x, y, gw, gh); g.fillRect(x, y, gw, rh);
+        for (var i = 2; i < 7; i++) { g.beginPath(); g.moveTo(x, y + rh * i); g.lineTo(x + gw, y + rh * i); g.stroke(); }
+        for (var j = 1; j < 4; j++) { g.beginPath(); g.moveTo(x + cw * j, y + rh); g.lineTo(x + cw * j, y + gh); g.stroke(); }
+        [[0, 2], [2, 3], [1, 4], [3, 5], [0, 6]].forEach(function (p) { g.fillRect(x + cw * p[0] + 14, y + rh * p[1] + 13, cw * .55, 9); });
+      }), 436, 400, white, 5);
+    },
+    flow: function () {
+      return sampleCanvas(canvasFor(436, 400, function (g) {
+        g.lineWidth = 7; g.beginPath();
+        [80, 200, 320].forEach(function (ny) { g.moveTo(60, ny); g.bezierCurveTo(150, ny, 140, 200, 218, 200); });
+        g.moveTo(218, 200); g.lineTo(380, 200); g.stroke();
+        [[60, 80], [60, 200], [60, 320]].forEach(function (n) { g.beginPath(); g.arc(n[0], n[1], 20, 0, 6.283); g.fill(); });
+        g.beginPath(); g.arc(218, 200, 44, 0, 6.283); g.stroke(); g.beginPath(); g.arc(218, 200, 18, 0, 6.283); g.fill();
+        g.beginPath(); g.moveTo(380, 172); g.lineTo(410, 200); g.lineTo(380, 228); g.stroke();
+      }), 436, 400, white, 5);
+    },
+    gauge: function () {
+      return sampleCanvas(canvasFor(436, 400, function (g) {
+        var cx = 218, cy = 250, r = 170; g.lineWidth = 9;
+        g.beginPath(); g.arc(cx, cy, r, Math.PI * .82, Math.PI * 2.18); g.stroke(); g.lineWidth = 6;
+        for (var t = 0; t <= 20; t++) { var a = Math.PI * (.82 + 1.36 * t / 20), r1 = r * (t % 5 ? .86 : .74), r2 = r * .94; g.beginPath(); g.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1); g.lineTo(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2); g.stroke(); }
+        var na = Math.PI * 1.9; g.lineWidth = 8; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(na) * r * .7, cy + Math.sin(na) * r * .7); g.stroke();
+        g.beginPath(); g.arc(cx, cy, 18, 0, 6.283); g.fill();
+      }), 436, 400, white, 5);
+    },
+    window: function () {
+      return sampleCanvas(canvasFor(436, 400, function (g) {
+        g.lineWidth = 7; var x = 26, y = 70, w = 384, h = 262;
+        g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, h, 14); else g.rect(x, y, w, h); g.stroke();
+        g.beginPath(); g.moveTo(x, y + 40); g.lineTo(x + w, y + 40); g.stroke();
+        [0, 1, 2].forEach(function (i) { g.beginPath(); g.arc(x + 24 + i * 22, y + 20, 6, 0, 6.283); g.fill(); });
+        g.strokeRect(x + 26, y + 66, 140, 110);
+        for (var k = 0; k < 6; k++) g.fillRect(x + 196, y + 72 + k * 20, k % 2 ? 120 : 160, 7);
+        g.fillRect(x + 26, y + 200, 100, 30);
+      }), 436, 400, white, 5);
+    },
+    sign: function () {
+      return sampleCanvas(canvasFor(600, 470, function (g) {
+        g.font = '300px "Mrs Saint Delafield", cursive'; g.textBaseline = 'alphabetic';
+        g.fillText('Yash', 40, 330);
+        g.lineWidth = 5; g.beginPath(); g.moveTo(90, 360); g.bezierCurveTo(220, 330, 420, 345, 560, 300); g.stroke();
+      }), 600, 470, white, 4);
+    },
+    cursor: function () {
+      return sampleCanvas(canvasFor(260, 290, function (g) {
+        g.beginPath(); g.moveTo(20, 10); g.lineTo(20, 230); g.lineTo(75, 182); g.lineTo(118, 270); g.lineTo(150, 255); g.lineTo(108, 170); g.lineTo(180, 165); g.closePath(); g.fill();
+      }), 260, 290, white, 5);
+    }
+  };
+  function getShapePoints(name) {
+    if (!cache[name]) { var p = SHAPES[name] && SHAPES[name](); if (!p) return null; cache[name] = p; }
+    return cache[name];
+  }
+
+  // dynamic scenes: points move along a path every frame
+  function ringPos(p, now, r) {
+    var a = p.u * 6.283 + now * 0.00006 * (p.layer ? 1.4 : 1);
+    var rx = r.width * .52 * (1 + p.v * .16), ry = r.height * .44 * (1 + p.v * .2);
+    return [r.left + r.width / 2 + Math.cos(a) * rx, r.top + r.height / 2 + Math.sin(a) * ry * (0.9 + 0.1 * Math.sin(a * 3 + now * .0004))];
+  }
+  function streamPos(p, now, r) {
+    var s = (p.u + now * 0.000035) % 1;                       // flows downwards through the grid
+    var y = r.top + s * r.height;
+    var x = r.left + r.width * (0.5 + 0.08 * Math.sin(s * 14 + 1.2) + 0.04 * Math.sin(s * 37)) + p.v * 26 * (0.5 + 0.5 * Math.sin(s * 9));
+    return [x, y];
+  }
+
+  // ── which shape belongs to the current scene, and where its anchor is ──
+  var anchors = {}; $$('[data-anchor]').forEach(function (el) { anchors[el.getAttribute('data-anchor')] = el; });
+  function setScene(next, nextIcon) {
+    var name = next === 'hero' ? 'logo' : next === 'crafts' ? nextIcon : next;
+    var anchorKey = next === 'hero' ? 'logo' : next;
+    if (shape && shape.name === name) return;
+    var dyn = name === 'ring' || name === 'stream';
+    var pts = dyn ? null : name === 'drift' ? [] : getShapePoints(name);
+    if (!dyn && (!pts || !pts.length)) { shape = { name: name, anchor: null, pts: [], dyn: false }; assign(0); return; }
+    shape = { name: name, anchor: anchors[anchorKey], pts: pts, dyn: dyn };
+    var use = dyn ? Math.round(parts.length * (name === 'stream' ? .42 : .55)) : Math.min(pts.length, Math.round(parts.length * (name === 'logo' ? .9 : .78)));
+    assign(use);
+  }
+  function assign(use) {
+    // shuffle so every shape is drawn by particles coming from all over the screen
+    for (var i = parts.length - 1; i > 0; i--) { var j = (Math.random() * (i + 1)) | 0, t = parts[i]; parts[i] = parts[j]; parts[j] = t; }
+    var pts = shape && shape.pts && shape.pts.length ? shape.pts : null, stride = pts ? pts.length / Math.max(use, 1) : 0;
+    parts.forEach(function (p, k) {
+      p.on = k < use;
+      if (p.on && pts) { var q = pts[Math.floor(k * stride)]; p.nx = q[0] + rnd(-.002, .002); p.ny = q[1] + rnd(-.002, .002); }
+      if (p.on && shape.dyn) { p.u = Math.random(); p.v = gauss(); }
+      p.red = false;
+    });
+    parts[0].red = true;   // one red point, always
   }
 
   function newPart() {
-    var z = Math.random(), kind = z > 0.97 ? 'bokeh' : z > 0.72 ? 'mid' : 'dust';
-    var x = rnd(0, W), y = rnd(0, H);
-    return { x: x, y: y, tx: x, ty: y, vx: 0, vy: 0, z: rnd(0.2, 1), kind: kind, tw: rnd(0, 6.283), sp: rnd(0.6, 1.4), free: true, red: false };
+    var z = Math.random();
+    return { x: rnd(0, W), y: rnd(0, H), vx: 0, vy: 0, fx: rnd(0, W), fy: rnd(0, H), z: rnd(.2, 1),
+      kind: z > .965 ? 'bokeh' : z > .72 ? 'mid' : 'dust', layer: Math.random() < .14 ? 1 : 0,
+      tw: rnd(0, 6.283), sp: rnd(.6, 1.4), on: false, nx: 0, ny: 0, u: 0, v: 0, red: false };
   }
   function resize() {
-    DPR = Math.min(window.devicePixelRatio || 1, 2);
-    W = window.innerWidth; H = window.innerHeight;
-    canvas.width = W * DPR; canvas.height = H * DPR; ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    var want = Math.round(Math.min(2000, Math.max(700, W * H / 700)));
+    DPR = Math.min(devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight;
+    [back, front].forEach(function (c) { c.width = W * DPR; c.height = H * DPR; });
+    cb.setTransform(DPR, 0, 0, DPR, 0, 0); cf.setTransform(DPR, 0, 0, DPR, 0, 0);
+    var want = Math.round(Math.min(2200, Math.max(700, W * H / 620)));
     while (parts.length < want) parts.push(newPart());
-    parts.length = want; N = want;
-    morph(currentShape, true);
+    parts.length = want;
+    var s = shape; shape = null; if (s) setScene(scene, icon);
   }
 
-  function morph(name, instant) {
-    instant = instant || reduce;
-    if (W <= 960 && name !== 'logo') name = 'scatter';   // narrow screens: text needs the room, only the logo is drawn
-    var b = box(name), shape = name === 'scatter' ? null : drawShape(name, Math.round(b.w), Math.round(b.h));
-    var pts = shape ? shape.pts : [];
-    ghost.target = shape ? (name === 'logo' ? 0.07 : 0.045) : 0;
-    if (shape) { ghost.img = shape.canvas; ghost.x = b.x; ghost.y = b.y; if (instant) ghost.a = ghost.target; }
-    for (var i = parts.length - 1; i > 0; i--) { var j = (Math.random() * (i + 1)) | 0, t = parts[i]; parts[i] = parts[j]; parts[j] = t; }
-    var use = Math.min(pts.length, Math.round(N * 0.8)), stride = pts.length / Math.max(use, 1);
-    // keep the background sparse: only a few hundred free particles are visible, the rest rest unseen
-    var freeMax = Math.round(W * H / (W > 960 ? 3600 : 2600)), freeSeen = 0;
-    parts.forEach(function (p, k) {
-      if (k < use) { var q = pts[Math.floor(k * stride)]; p.tx = b.x + q[0] + rnd(-0.8, 0.8); p.ty = b.y + q[1] + rnd(-0.8, 0.8); p.free = false; p.off = false; }
-      else { p.tx = rnd(0, W); p.ty = rnd(0, H); p.free = true; p.off = ++freeSeen > freeMax; }
-      p.red = false;
-      if (instant) { p.x = p.tx; p.y = p.ty; }
+  // ── scene tracking ──
+  var scenes = $$('[data-scene]'), navLinks = $$('[data-nav]'), metiers = $('.metiers'), metierItems = $$('.metiers-list li');
+  function sceneCheck() {
+    headerCheck();
+    var mid = innerHeight * .5, cur = scene;
+    scenes.forEach(function (s) { var r = s.getBoundingClientRect(); if (r.top <= mid && r.bottom > mid) cur = s.getAttribute('data-scene'); });
+    if (scrollY < 40) cur = 'hero';
+    // crafts: step through the four icons while the section is pinned
+    var ic = icon;
+    if (metiers) {
+      var r = metiers.getBoundingClientRect(), span = r.height - innerHeight;
+      var prog = span > 0 ? Math.min(.999, Math.max(0, -r.top / span)) : 0;
+      var idx = innerWidth <= 860 ? 0 : Math.floor(prog * metierItems.length);
+      metierItems.forEach(function (li, k) { li.classList.toggle('is-active', k === idx); });
+      ic = metierItems[idx] ? metierItems[idx].getAttribute('data-icon') : 'sheet';
+    }
+    navLinks.forEach(function (a) {
+      var s = $(a.getAttribute('href')); if (!s) return; var rr = s.getBoundingClientRect();
+      a.classList.toggle('is-active', rr.top <= mid && rr.bottom > mid);
     });
-    parts[0].red = true; // one red point, always
+    if (cur !== scene || ic !== icon) { scene = cur; icon = ic; setScene(scene, icon); }
     if (reduce) drawStatic();
   }
 
+  // ── render ──
   var running = true, looping = false, last = 0;
   function start() { if (!looping && running && !reduce) { looping = true; requestAnimationFrame(frame); } }
+  function target(p, now, r) {
+    if (shape.dyn) return shape.name === 'ring' ? ringPos(p, now, r) : streamPos(p, now, r);
+    return [r.left + p.nx * r.width, r.top + p.ny * r.height];
+  }
   function frame(now) {
     if (!running) { looping = false; return; }
     var dt = Math.min(2, (now - last) / 16.67 || 1); last = now;
-    var sy = window.scrollY; scrollVel = scrollVel * 0.85 + (sy - lastScroll) * 0.15; lastScroll = sy;
-    ctx.clearRect(0, 0, W, H);
-
-    ghost.a += (ghost.target - ghost.a) * 0.05;
-    if (ghost.img && ghost.a > 0.003) { ctx.globalAlpha = ghost.a; ctx.drawImage(ghost.img, ghost.x, ghost.y); }
-
+    vel = vel * .85 + (scrollY - lastScroll) * .15; lastScroll = scrollY;
+    cb.clearRect(0, 0, W, H); cf.clearRect(0, 0, W, H);
+    var r = shape && shape.anchor ? shape.anchor.getBoundingClientRect() : null;
     for (var i = 0; i < parts.length; i++) {
-      var p = parts[i];
-      if (p.free) {
-        // slow drift, plus depth parallax against the scroll
-        p.tx += Math.sin(now / 4000 * p.sp + i) * 0.06; p.ty += Math.cos(now / 4600 * p.sp + i) * 0.06 - scrollVel * p.z * 0.12;
-        if (p.ty < -20) { p.ty += H + 40; p.y += H + 40; } else if (p.ty > H + 20) { p.ty -= H + 40; p.y -= H + 40; }
+      var p = parts[i], tx, ty;
+      if (p.on && r) { var t = target(p, now, r); tx = t[0]; ty = t[1]; }
+      else {
+        p.fx += Math.sin(now / 5000 * p.sp + i) * .07; p.fy += Math.cos(now / 5600 * p.sp + i) * .07 - vel * p.z * .14;
+        if (p.fy < -30) { p.fy += H + 60; p.y += H + 60; } else if (p.fy > H + 30) { p.fy -= H + 60; p.y -= H + 60; }
+        if (p.fx < -30) p.fx += W + 60; else if (p.fx > W + 30) p.fx -= W + 60;
+        tx = p.fx; ty = p.fy;
       }
-      var k = p.free ? 0.03 : 0.05;
-      var ax = (p.tx - p.x) * k, ay = (p.ty - p.y) * k;
+      var k = p.on ? (shape && shape.dyn ? .07 : .055) : .03;
+      var ax = (tx - p.x) * k, ay = (ty - p.y) * k;
       var dx = p.x - mouse.x, dy = p.y - mouse.y, d2 = dx * dx + dy * dy;
-      if (d2 < 12000) { var f = (12000 - d2) / 12000 * 2.4, dd = Math.sqrt(d2) || 1; ax += dx / dd * f; ay += dy / dd * f; }
-      p.vx = (p.vx + ax * dt) * 0.83; p.vy = (p.vy + ay * dt) * 0.83;
+      if (d2 < 14000) { var f = (14000 - d2) / 14000 * 2.6, dd = Math.sqrt(d2) || 1; ax += dx / dd * f; ay += dy / dd * f; }
+      p.vx = (p.vx + ax * dt) * .82; p.vy = (p.vy + ay * dt) * .82;
       p.x += p.vx * dt; p.y += p.vy * dt;
-
-      if (p.off) continue;
-      var tw = 0.6 + 0.4 * Math.sin(now / 1100 * p.sp + p.tw), spr, size, a;
-      if (p.red) { spr = SPR.red; size = 12; a = 1; }
-      else if (p.kind === 'bokeh') { spr = SPR.bokeh; size = p.free ? 10 * p.z + 6 : 13; a = (p.free ? 0.22 : 0.5) * tw; }
-      else if (p.kind === 'mid') { spr = SPR.mid; size = p.free ? 4 + 2 * p.z : 6.5; a = (p.free ? 0.35 : 0.85) * tw; }
-      else { spr = SPR.dust; size = p.free ? 1.6 + 1.2 * p.z : 3; a = (p.free ? 0.3 + 0.3 * p.z : 0.9) * tw; }
-      ctx.globalAlpha = a;
-      ctx.drawImage(spr, p.x - size / 2, p.y - size / 2, size, size);
+      if (p.y < -40 || p.y > H + 40) continue;
+      var tw = .62 + .38 * Math.sin(now / 1000 * p.sp + p.tw), spr, size, a;
+      var big = p.on && shape && shape.name === 'logo' ? 1.35 : 1;
+      if (p.red) { spr = SPR.red; size = 18; a = 1; }
+      else if (p.kind === 'bokeh') { spr = SPR.bokeh; size = p.on ? 22 * big : 10 + 10 * p.z; a = (p.on ? .7 : .2) * tw; }
+      else if (p.kind === 'mid') { spr = SPR.mid; size = p.on ? 10 * big : 4 + 3 * p.z; a = (p.on ? .95 : .4) * tw; }
+      else { spr = SPR.dust; size = p.on ? 5.5 * big : 2.6 + 2 * p.z; a = (p.on ? 1 : .32 + .3 * p.z) * tw; }
+      var ctx = p.layer ? cf : cb;
+      ctx.globalAlpha = a; ctx.drawImage(spr, p.x - size / 2, p.y - size / 2, size, size);
     }
-    ctx.globalAlpha = 1;
+    cb.globalAlpha = cf.globalAlpha = 1;
     requestAnimationFrame(frame);
   }
-  function drawStatic() {  // reduced motion: one still frame per shape
-    ctx.clearRect(0, 0, W, H);
-    if (ghost.img) { ctx.globalAlpha = ghost.target; ctx.drawImage(ghost.img, ghost.x, ghost.y); }
+  function drawStatic() {   // reduced motion: particles sit on their shape, no movement
+    cb.clearRect(0, 0, W, H); cf.clearRect(0, 0, W, H);
+    var r = shape && shape.anchor ? shape.anchor.getBoundingClientRect() : null;
     parts.forEach(function (p) {
-      if (p.off) return;
-      var spr = p.red ? SPR.red : SPR[p.kind], size = p.red ? 12 : p.kind === 'bokeh' ? 12 : p.kind === 'mid' ? 6 : 3;
-      ctx.globalAlpha = p.red ? 1 : p.free ? 0.3 : 0.85; ctx.drawImage(spr, p.x - size / 2, p.y - size / 2, size, size);
+      var x, y; if (p.on && r) { var t = target(p, 0, r); x = t[0]; y = t[1]; } else { x = p.fx; y = p.fy; }
+      var spr = p.red ? SPR.red : SPR[p.kind], size = p.red ? 18 : p.on ? (p.kind === 'bokeh' ? 20 : p.kind === 'mid' ? 9 : 5) : 3;
+      cb.globalAlpha = p.red ? 1 : p.on ? .9 : .3; cb.drawImage(spr, x - size / 2, y - size / 2, size, size);
     });
-    ctx.globalAlpha = 1;
-  }
-
-  // ── Header, nav, services caption and shapes follow what sits in the middle of the screen ──
-  var navLinks = document.querySelectorAll('[data-nav]');
-  var svcItems = document.querySelectorAll('.svc__item');
-  var svcCap = document.getElementById('svc-cap');
-  var shapeEls = document.querySelectorAll('[data-shape]');
-  function middleCheck() {
-    header.classList.toggle('is-solid', window.scrollY > 40);
-    var mid = window.innerHeight * 0.5, shape = null, best = Infinity;
-    shapeEls.forEach(function (el) {
-      var r = el.getBoundingClientRect();
-      if (r.top <= mid && r.bottom >= mid && r.height < best) { best = r.height; shape = el.getAttribute('data-shape'); }
-    });
-    svcItems.forEach(function (el, k) {
-      var r = el.getBoundingClientRect(), on = r.top <= mid && r.bottom >= mid;
-      el.classList.toggle('is-on', on);
-      if (on && svcCap) svcCap.innerHTML = '<b>' + String(k + 1).padStart(2, '0') + '</b> / ' + String(svcItems.length).padStart(2, '0') + '&nbsp;&nbsp;' + el.getAttribute('data-name');
-    });
-    navLinks.forEach(function (a) {
-      var s = document.querySelector(a.getAttribute('href')); if (!s) return;
-      var r = s.getBoundingClientRect();
-      a.classList.toggle('is-on', r.top <= mid && r.bottom >= mid);
-    });
-    if (shape && shape !== currentShape) { currentShape = shape; morph(shape); }
+    cb.globalAlpha = 1;
   }
 
   window.addEventListener('mousemove', function (e) { mouse.x = e.clientX; mouse.y = e.clientY; }, { passive: true });
   document.addEventListener('mouseleave', function () { mouse.x = mouse.y = -9999; });
-  var rt; window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { resize(); middleCheck(); }, 150); });
+  window.addEventListener('scroll', sceneCheck, { passive: true });
+  var rt; window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { resize(); sceneCheck(); }, 150); });
   document.addEventListener('visibilitychange', function () { running = !document.hidden; start(); });
-  window.addEventListener('scroll', middleCheck, { passive: true });
 
-  logoImg.onload = function () { logoReady = true; if (currentShape === 'logo') morph('logo'); };
-  logoImg.src = '/assets/logo-light.webp';
   resize();
-  if (!reduce) { parts.forEach(function (p) { p.x = rnd(0, W); p.y = rnd(0, H); }); start(); }
-  // fonts change the hero layout; place the logo again once they are in
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (currentShape === 'logo') morph('logo'); });
-  middleCheck();
+  function refreshShapes() { cache = {}; var s = scene; shape = null; setScene(s, icon); if (reduce) drawStatic(); }
+  logoImg.onload = refreshShapes;
+  if (document.fonts && document.fonts.load) document.fonts.load('300px "Mrs Saint Delafield"').then(function () { delete cache.sign; if (shape && shape.name === 'sign') refreshShapes(); });
+  sceneCheck(); setScene(scene, icon);
+  start();
 })();
