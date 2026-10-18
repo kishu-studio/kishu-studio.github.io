@@ -14,317 +14,443 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#F4F2ED">
+<meta name="theme-color" content="#07090E">
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preload" href="/assets/logo-light.webp" as="image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"ProfessionalService","name":"Kishu Studio","url":"https://kishu.studio/","email":"hello@kishu.studio","image":"https://kishu.studio/og.png","description":"Fixed-price web scraping, business automation and website speed and SEO fixes.","founder":{"@type":"Person","name":"Yash Panchal","jobTitle":"Founder"},"parentOrganization":{"@type":"Organization","name":"CodFleet"},"areaServed":["IN","FI","EU","US"]}
 </script>
 <style>
 :root{
-  --paper:#F4F2ED; --ink:#111111; --ink-2:#55524C; --rule:#D9D5CC; --rule-ink:#111111;
-  --accent:#E1301E; --accent-ink:#B8200F;
-  --max:1240px; --g:24px; --pad:clamp(20px,5vw,56px);
+  --bg:#07090E; --bg-2:#0D1017; --ink:#ECEAE4; --ink-2:#9A9EA6; --ink-3:#5E636C;
+  --rule:rgba(236,234,228,.12); --rule-2:rgba(236,234,228,.28);
+  --accent:#FF4433;
+  --max:1240px; --g:32px; --pad:clamp(20px,5vw,56px);
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--paper);color:var(--ink);font:400 18px/1.55 "Inter Tight",-apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif;font-feature-settings:"tnum" 0,"ss01" 1}
-a{color:inherit;text-decoration-thickness:1px;text-underline-offset:3px}
-a:hover{color:var(--accent-ink)}
+html{-webkit-text-size-adjust:100%}
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 18px/1.55 "Inter Tight",-apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
 img{display:block;max-width:100%;height:auto}
-.wrap{max-width:var(--max);margin:0 auto;padding:0 var(--pad)}
-.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--g)}
-.label{font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
-.muted{color:var(--ink-2)}
-.num{font-feature-settings:"tnum" 1}
-.skip{position:absolute;left:-999px}.skip:focus{left:16px;top:16px;background:var(--ink);color:var(--paper);padding:8px 12px;z-index:9}
+::selection{background:var(--accent);color:#fff}
+[hidden]{display:none!important}
+.wrap{position:relative;max-width:var(--max);margin:0 auto;padding:0 var(--pad)}
+.mono{font-family:var(--mono);font-size:12px;font-weight:400;letter-spacing:.22em;text-transform:uppercase}
+.dim{color:var(--ink-2)}
+.num{font-variant-numeric:tabular-nums}
+.skip{position:absolute;left:-999px}.skip:focus{left:16px;top:16px;background:var(--ink);color:var(--bg);padding:8px 12px;z-index:20}
+
+/* particle field: fixed behind everything */
+#field{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+main,footer{position:relative;z-index:1}
 
 /* header */
-.top{border-bottom:1px solid var(--rule-ink)}
-.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:24px;height:68px}
-.mark{display:flex;align-items:center;gap:12px;text-decoration:none;font-weight:700;letter-spacing:.02em;font-size:18px}
-.mark img{height:44px;width:auto;display:block}
-.foot img{height:30px;width:auto;display:block;margin-bottom:6px}
-.top nav{display:flex;gap:28px;font-size:15px}
-.top nav a{text-decoration:none}
-.top nav a:hover{text-decoration:underline}
-.btn{display:inline-flex;align-items:center;gap:10px;min-height:48px;padding:0 22px;background:var(--ink);color:var(--paper);text-decoration:none;font-weight:600;font-size:16px;border:1px solid var(--ink)}
-.btn:hover{background:var(--accent);border-color:var(--accent);color:#fff}
-.btn--line{background:transparent;color:var(--ink)}
-.btn--line:hover{background:var(--ink);border-color:var(--ink);color:var(--paper)}
-.btn--sm{min-height:40px;padding:0 16px;font-size:15px}
+.top{position:fixed;top:0;left:0;right:0;z-index:10;transition:background .4s,backdrop-filter .4s}
+.top.is-solid{background:rgba(7,9,14,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:24px;height:76px}
+.logo img{height:34px;width:auto}
+.top nav{display:flex;align-items:center;gap:30px}
+.top nav a{position:relative;padding:6px 0;color:var(--ink-2);transition:color .25s}
+.top nav a:hover,.top nav a.is-on{color:var(--ink)}
+.top nav a::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .35s}
+.top nav a.is-on::after{transform:scaleX(1)}
+.top nav .sep{width:1px;height:16px;background:var(--rule-2)}
+.top nav .wa{color:var(--ink)}
 
-/* hero */
-.hero{padding:clamp(56px,10vw,128px) 0 clamp(48px,7vw,88px)}
-.hero h1{grid-column:1/-1;margin:0;font-weight:600;font-size:clamp(44px,8.4vw,116px);line-height:.96;letter-spacing:-.035em}
-.hero h1 span{color:var(--accent)}
-.hero__by{grid-column:1/6;margin-top:clamp(32px,5vw,64px);font-size:20px;line-height:1.45}
-.hero__cta{grid-column:7/-1;margin-top:clamp(32px,5vw,64px);display:flex;flex-wrap:wrap;gap:12px;align-content:flex-start;justify-content:flex-end}
-.facts{list-style:none;margin:clamp(48px,7vw,88px) 0 0;padding:0;grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));column-gap:var(--g);border-top:1px solid var(--rule-ink)}
-.facts li{padding:16px 0 0;font-size:15px;line-height:1.4}
-.facts b{display:block;font-weight:600;font-size:17px;margin-bottom:4px}
+/* buttons and links */
+.btn{display:inline-flex;align-items:center;gap:12px;min-height:52px;padding:0 26px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);font-weight:500;font-size:16px;transition:background .25s,color .25s,border-color .25s}
+.btn:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn--line{background:transparent;color:var(--ink);border-color:var(--rule-2)}
+.btn--line:hover{background:transparent;border-color:var(--ink);color:var(--ink)}
+.arrow{display:inline-block;transition:transform .3s}
+a:hover .arrow{transform:translateX(4px)}
+
+/* reveal on scroll */
+.rv{opacity:0;transform:translateY(24px);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1)}
+.rv.in{opacity:1;transform:none}
+
+/* hero: the particles draw the wordmark in the upper half */
+.hero{min-height:100svh;display:flex;flex-direction:column;justify-content:flex-end;padding:120px 0 clamp(110px,16vh,150px)}
+.hero .mono{color:var(--ink-2);margin-bottom:28px}
+.hero h1{margin:0;max-width:15em;font-weight:300;font-size:clamp(34px,4.6vw,64px);line-height:1.08;letter-spacing:-.025em}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero__row{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:28px;margin-top:40px}
+.hero__by{margin:0;max-width:30em;color:var(--ink-2);font-size:18px}
+.hero__cta{display:flex;flex-wrap:wrap;gap:12px}
 
 /* sections */
-.sec{border-top:1px solid var(--rule-ink);padding:clamp(48px,7vw,96px) 0}
-.sec__head{grid-column:1/4}
-.sec__head .n{font-size:15px;font-weight:600;color:var(--accent)}
-.sec__head h2{margin:6px 0 0;font-size:clamp(28px,3.2vw,40px);line-height:1.05;letter-spacing:-.02em;font-weight:600}
-.sec__body{grid-column:4/-1}
-.lead{font-size:clamp(20px,2vw,24px);line-height:1.4;margin:0 0 40px;max-width:30em}
+.sec{padding:clamp(96px,14vw,180px) 0}
+.sec__label{display:flex;gap:18px;align-items:center;margin-bottom:28px;color:var(--ink-2)}
+.sec__label b{color:var(--accent);font-weight:500}
+.sec h2{margin:0;font-weight:300;font-size:clamp(40px,6vw,84px);line-height:1;letter-spacing:-.035em}
+.statement{margin:36px 0 0;max-width:22em;font-weight:300;font-size:clamp(24px,2.8vw,38px);line-height:1.25;letter-spacing:-.02em}
+.statement em{font-style:normal;color:var(--accent)}
+.half{max-width:620px}
 
-/* services table */
-.switch{display:inline-flex;border:1px solid var(--ink);margin:0 0 28px}
-.switch button{font:inherit;font-size:15px;font-weight:600;padding:10px 18px;border:0;background:transparent;color:var(--ink);cursor:pointer;min-height:44px}
-.switch button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
-.rows{list-style:none;margin:0;padding:0;border-top:1px solid var(--rule-ink)}
-.row{display:grid;grid-template-columns:48px minmax(0,1fr) minmax(0,1.3fr) 150px;column-gap:var(--g);padding:24px 0;border-bottom:1px solid var(--rule)}
-.row .i{font-size:15px;font-weight:600;color:var(--ink-2)}
-.row h3{margin:0;font-size:22px;line-height:1.2;font-weight:600;letter-spacing:-.01em}
+/* principle facts */
+.facts{list-style:none;margin:72px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--g)}
+.facts li{border-top:1px solid var(--rule-2);padding-top:18px;color:var(--ink-2);font-size:16px}
+.facts b{display:block;color:var(--ink);font-weight:500;font-size:18px;margin-bottom:6px}
+
+/* services: scroll-driven list on the left, the particles draw each service on the right */
+.svc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--g);margin-top:64px}
+.svc__list{list-style:none;margin:0;padding:0}
+.svc__item{min-height:62vh;display:flex;flex-direction:column;justify-content:center;border-top:1px solid var(--rule)}
+.svc__item:last-child{border-bottom:1px solid var(--rule)}
+.svc__item .mono{color:var(--ink-3);transition:color .4s}
+.svc__item h3{margin:14px 0 10px;font-weight:400;font-size:clamp(30px,3.4vw,46px);line-height:1.05;letter-spacing:-.025em;color:var(--ink-3);transition:color .4s}
+.svc__item p{margin:0;max-width:26em;color:var(--ink-3);font-size:17px;transition:color .4s}
+.svc__item .from{margin-top:18px;font-family:var(--mono);font-size:13px;letter-spacing:.14em;color:var(--ink-3);transition:color .4s}
+.svc__item.is-on .mono,.svc__item.is-on .from{color:var(--accent)}
+.svc__item.is-on h3{color:var(--ink)}
+.svc__item.is-on p{color:var(--ink-2)}
+
+/* price table */
+.prices{margin-top:120px}
+.prices__head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:28px}
+.prices__head h3{margin:0;font-weight:300;font-size:clamp(28px,3vw,40px);letter-spacing:-.02em}
+.switch{display:inline-flex;border:1px solid var(--rule-2)}
+.switch button{font:inherit;font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;padding:0 18px;min-height:44px;border:0;background:transparent;color:var(--ink-2);cursor:pointer;transition:background .25s,color .25s}
+.switch button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.rows{list-style:none;margin:0;padding:0;border-top:1px solid var(--rule-2)}
+.row{display:grid;grid-template-columns:60px minmax(0,1fr) minmax(0,1.4fr) 170px;gap:var(--g);padding:26px 0;border-bottom:1px solid var(--rule);align-items:baseline}
+.row .i{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--ink-3)}
+.row h4{margin:0;font-weight:400;font-size:22px;letter-spacing:-.01em}
 .row p{margin:0;color:var(--ink-2);font-size:16px}
-.row .price{text-align:right;font-weight:600;font-size:20px;white-space:nowrap}
-.row .price small{display:block;font-size:13px;font-weight:500;color:var(--ink-2);letter-spacing:.04em}
-.note{margin:24px 0 0;font-size:16px;color:var(--ink-2);max-width:42em}
-.note b{color:var(--ink);font-weight:600}
-[hidden]{display:none!important}
+.row .price{text-align:right;font-size:20px;white-space:nowrap}
+.row .price small{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-top:4px}
+.note{margin:28px 0 0;max-width:46em;color:var(--ink-2);font-size:16px}
+.note b{color:var(--ink);font-weight:500}
 
 /* work */
-.work{list-style:none;margin:0;padding:0;border-top:1px solid var(--rule-ink)}
-.work li{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.4fr) auto;column-gap:var(--g);align-items:baseline;padding:28px 0;border-bottom:1px solid var(--rule)}
-.work h3{margin:0;font-size:24px;font-weight:600;letter-spacing:-.01em;line-height:1.2}
-.work h3 small{display:block;font-size:14px;font-weight:500;color:var(--ink-2);letter-spacing:.02em;margin-top:4px}
-.work p{margin:0;color:var(--ink-2);font-size:16px}
-.work a.go{font-weight:600;white-space:nowrap}
+.work{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:72px var(--g);margin-top:72px}
+.card .mono{display:block;color:var(--ink-3);margin-bottom:12px}
+.card .mono b{color:var(--ink-2);font-weight:400}
+.card h3{margin:0 0 18px;font-weight:400;font-size:26px;letter-spacing:-.015em}
+.card__img{position:relative;display:block;aspect-ratio:16/10;overflow:hidden;background:var(--bg-2);border:1px solid var(--rule)}
+.card__img img{width:100%;height:100%;object-fit:cover;transition:transform 1.2s cubic-bezier(.2,.7,.2,1)}
+.card:hover .card__img img{transform:scale(1.035)}
+.card__img--private{display:flex;align-items:center;justify-content:center;background:radial-gradient(rgba(236,234,228,.16) 1px,transparent 1.4px) 0 0/18px 18px,var(--bg-2)}
+.card__img--private{gap:6%}
+.card__img--private .tag{position:absolute;left:16px;top:14px;color:var(--ink-3)}
+.tv{position:relative;width:22%;aspect-ratio:9/16;padding:6px 7px;display:flex;flex-direction:column;gap:5px;background:#0c1512;border:1px solid rgba(193,156,88,.5);box-shadow:0 20px 50px rgba(0,0,0,.5);transform:rotate(-4deg)}
+.tv--b{transform:rotate(3deg) translateY(10%)}
+.tv__ph{display:block;height:34%;margin:-6px -7px 2px;background:radial-gradient(circle at 40% 45%,#6d8a3a,#2a3a1c 45%,#121a12 75%)}
+.tv__ph--b{background:radial-gradient(circle at 55% 50%,#8a5a3a,#3a2416 45%,#151010 75%)}
+.tv b{font-weight:500;font-size:clamp(9px,1vw,13px);color:#efe7d6;letter-spacing:.06em;text-transform:uppercase}
+.tv em{font-style:normal;font-size:clamp(10px,1.3vw,18px);color:#c19c58;font-weight:600;margin-top:-4px}
+.tv span{display:block;height:3px;width:86%;background:rgba(239,231,214,.35)}
+.tv span.s{width:60%;background:rgba(193,156,88,.55)}
+.card blockquote{margin:22px 0 10px;font-style:italic;font-weight:300;font-size:22px;line-height:1.35}
+.card p{margin:0;color:var(--ink-2);font-size:16px;max-width:32em}
+.card .go{display:inline-flex;gap:8px;margin-top:16px;font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;padding-bottom:4px;box-shadow:inset 0 -1px 0 var(--rule-2)}
 
-/* process + promises */
-.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));column-gap:var(--g)}
-.steps li{border-top:2px solid var(--ink);padding-top:16px}
-.steps b{display:block;font-size:44px;line-height:1;font-weight:600;letter-spacing:-.03em;margin-bottom:18px}
-.steps h3{margin:0 0 6px;font-size:19px;font-weight:600}
-.steps p{margin:0;font-size:16px;color:var(--ink-2)}
-.promise{list-style:none;margin:0;padding:0;border-top:1px solid var(--rule-ink)}
-.promise li{display:grid;grid-template-columns:48px minmax(0,1fr);column-gap:var(--g);padding:18px 0;border-bottom:1px solid var(--rule);font-size:clamp(19px,1.8vw,22px);line-height:1.35}
-.promise li span{font-size:15px;font-weight:600;color:var(--accent);padding-top:4px}
+/* process */
+.steps{list-style:none;margin:72px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--g)}
+.steps li{border-top:1px solid var(--rule-2);padding-top:22px}
+.steps b{display:block;font-family:var(--mono);font-weight:400;font-size:12px;letter-spacing:.2em;color:var(--accent);margin-bottom:28px}
+.steps h3{margin:0 0 10px;font-weight:400;font-size:26px;letter-spacing:-.015em}
+.steps p{margin:0;color:var(--ink-2);font-size:16px}
 
-/* founder */
-.founder{display:block;max-width:640px}
+/* promises */
+.promise{list-style:none;margin:56px 0 0;padding:0;border-top:1px solid var(--rule-2)}
+.promise li{display:grid;grid-template-columns:60px minmax(0,1fr);gap:var(--g);padding:22px 0;border-bottom:1px solid var(--rule);font-weight:300;font-size:clamp(20px,2.2vw,28px);line-height:1.3;letter-spacing:-.01em}
+.promise li span{font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:var(--accent);padding-top:10px}
 
-.letter{margin:0;font-size:clamp(21px,2.1vw,26px);line-height:1.42;letter-spacing:-.01em;max-width:32em}
-.letter p{margin:0 0 .55em}
-.sign{margin-top:22px;font-size:16px}
-.sign b{display:block;font-weight:600;font-size:18px}
-.legal{margin:48px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:var(--g);border-top:1px solid var(--rule-ink)}
-.legal div{padding-top:14px}
-.legal dt{font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);margin-bottom:6px}
-.legal dd{margin:0;font-size:16px;line-height:1.45}
+/* who */
+.letter{margin:48px 0 0;max-width:30em;font-weight:300;font-size:clamp(22px,2.4vw,32px);line-height:1.38;letter-spacing:-.015em}
+.letter p{margin:0 0 .6em}
+.sign{margin:32px 0 0;color:var(--ink-2);font-size:16px}
+.sign b{display:block;color:var(--ink);font-weight:500;font-size:18px}
+.legal{margin:72px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--g)}
+.legal div{border-top:1px solid var(--rule-2);padding-top:16px}
+.legal dt{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
+.legal dd{margin:0;font-size:16px;color:var(--ink-2)}
 
 /* contact */
-.contact h2.big{grid-column:1/-1;margin:0 0 clamp(32px,5vw,56px);font-size:clamp(40px,7vw,96px);line-height:.98;letter-spacing:-.035em;font-weight:600}
-.contact__ways{grid-column:1/6;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
-.contact__ways p{margin:12px 0 0;font-size:16px;color:var(--ink-2)}
-.contact__form{grid-column:7/-1}
-.inq{display:grid;gap:18px;border-top:2px solid var(--ink);padding-top:20px}
-.inq__row{display:grid;gap:18px;grid-template-columns:1fr 1fr}
-.inq label{display:grid;gap:6px;font-size:14px;letter-spacing:.01em}
-.inq input,.inq textarea{width:100%;font:inherit;font-size:16px;padding:12px 0;border:0;border-bottom:1px solid var(--ink);background:transparent;color:var(--ink);border-radius:0;outline:none}
-.inq input:focus,.inq textarea:focus{border-bottom-width:2px}
+.contact h2{max-width:11em}
+.contact__grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:calc(var(--g)*2);margin-top:64px}
+.contact__ways{display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+.contact__ways p{margin:16px 0 0;color:var(--ink-2);font-size:16px}
+.contact__ways .mail{font-size:clamp(22px,2.4vw,30px);font-weight:300;padding-bottom:4px;margin-top:20px;box-shadow:inset 0 -1px 0 var(--rule-2)}
+.inq{display:grid;gap:22px;border-top:1px solid var(--rule-2);padding-top:24px}
+.inq__row{display:grid;gap:22px;grid-template-columns:1fr 1fr}
+.inq label{display:grid;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.inq input,.inq textarea{width:100%;font:inherit;font-family:"Inter Tight",sans-serif;font-size:17px;letter-spacing:0;text-transform:none;padding:10px 0;border:0;border-bottom:1px solid var(--rule-2);background:transparent;color:var(--ink);border-radius:0;outline:none;transition:border-color .25s}
+.inq input:focus,.inq textarea:focus{border-bottom-color:var(--accent)}
 .inq textarea{resize:vertical;min-height:120px}
-.inq__submit{display:grid;gap:8px;align-content:end}
-.inq button{font:inherit;font-weight:600;font-size:16px;padding:14px 22px;border:0;background:var(--ink);color:#fff;cursor:pointer}
+.inq ::placeholder{color:var(--ink-3)}
+.inq__submit{display:grid;gap:10px;align-content:end}
+.inq button{font:inherit;font-weight:500;font-size:16px;min-height:52px;padding:0 26px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer;transition:background .25s,border-color .25s,color .25s}
+.inq button:hover{background:var(--accent);border-color:var(--accent);color:#fff}
 .inq button:disabled{opacity:.6;cursor:default}
-.inq small{color:var(--ink-2);font-size:13px}
-.form-done{font-size:18px;line-height:1.5;border-top:2px solid var(--ink);padding-top:20px}
-@media(max-width:720px){.inq__row{grid-template-columns:1fr}}
+.inq small{color:var(--ink-3);font-size:13px}
+.form-done{font-size:20px;line-height:1.5;border-top:1px solid var(--rule-2);padding-top:24px}
 
 /* footer */
-.foot{border-top:1px solid var(--rule-ink);padding:28px 0 40px;font-size:14px;color:var(--ink-2)}
-.foot .wrap{display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between}
-.foot nav{display:flex;gap:20px;flex-wrap:wrap}
+.foot{border-top:1px solid var(--rule);padding:36px 0 48px;color:var(--ink-3)}
+.foot .wrap{display:flex;flex-wrap:wrap;gap:16px 32px;justify-content:space-between;align-items:center}
+.foot nav{display:flex;gap:24px;flex-wrap:wrap}
+.foot nav a:hover{color:var(--ink)}
 
-/* mobile first adjustments */
-@media (max-width:900px){
-  .top nav{display:none}
-  .hero__by,.hero__cta,.sec__head,.sec__body,.contact__ways,.contact__form{grid-column:1/-1}
-  .hero__cta{justify-content:flex-start;margin-top:24px}
-  .sec__head{margin-bottom:28px}
-  .facts{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:20px}
-  .row{grid-template-columns:36px minmax(0,1fr) auto;row-gap:8px}
+@media (max-width:960px){
+  .top nav a:not(.wa),.top nav .sep{display:none}
+  .facts{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:28px}
+  .svc{grid-template-columns:minmax(0,1fr)}
+  .svc__item{min-height:auto;padding:40px 0}
+  .svc__item .mono,.svc__item .from{color:var(--accent)}
+  .svc__item h3{color:var(--ink)}
+  .svc__item p{color:var(--ink-2)}
+  .row{grid-template-columns:40px minmax(0,1fr) auto;row-gap:8px}
   .row p{grid-column:2/-1;grid-row:2}
-  .work li{grid-template-columns:minmax(0,1fr);row-gap:8px}
-  .steps{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:32px}
+  .work{grid-template-columns:minmax(0,1fr)}
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:40px}
   .legal{grid-template-columns:minmax(0,1fr)}
-  .contact__form{margin-top:40px}
+  .contact__grid{grid-template-columns:minmax(0,1fr)}
 }
 @media (max-width:560px){
   body{font-size:17px}
-  .founder{grid-template-columns:minmax(0,1fr);row-gap:24px}
-  
-  .steps{grid-template-columns:minmax(0,1fr)}
-  .top .btn{display:none}
+  .logo img{height:28px}
+  .facts,.steps,.inq__row{grid-template-columns:minmax(0,1fr)}
+  .promise li{grid-template-columns:32px minmax(0,1fr);gap:16px}
+  .hero__cta .btn{flex:1 1 auto;justify-content:center}
 }
+@media (prefers-reduced-motion:reduce){
+  .rv{opacity:1;transform:none;transition:none}
+  .card__img img,.arrow{transition:none}
+}
+
+/* detailing */
+.grain{position:fixed;inset:-50%;z-index:2;pointer-events:none;opacity:.05;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");animation:grain 1.2s steps(6) infinite}
+@keyframes grain{0%{transform:translate(0,0)}20%{transform:translate(-3%,2%)}40%{transform:translate(2%,-3%)}60%{transform:translate(-2%,-1%)}80%{transform:translate(3%,3%)}100%{transform:translate(0,0)}}
+#cursor{position:fixed;left:0;top:0;z-index:30;width:28px;height:28px;margin:-14px 0 0 -14px;border:1px solid rgba(236,234,228,.5);border-radius:50%;pointer-events:none;opacity:0;transition:width .3s,height .3s,margin .3s,background .3s,border-color .3s,opacity .3s}
+.has-cursor #cursor{opacity:1}
+#cursor::after{content:"";position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:var(--accent)}
+#cursor.is-link{width:56px;height:56px;margin:-28px 0 0 -28px;border-color:var(--accent);background:rgba(255,68,51,.08)}
+[data-split] .w{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.08em;margin-bottom:-.08em}
+[data-split] .w>span{display:inline-block;transform:translateY(105%);transition:transform 1s cubic-bezier(.2,.7,.2,1)}
+[data-split].in .w>span{transform:none}
+.sec__label::after{content:"";flex:1;height:1px;background:var(--rule)}
+.hero__label{display:flex;align-items:center;gap:12px}
+.dot,.avail i{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.hero__meta{position:absolute;left:0;right:0;bottom:-76px;display:flex;flex-wrap:wrap;gap:12px 36px;padding:0 var(--pad);color:var(--ink-3)}
+.hero__meta b{color:var(--ink-2);font-weight:400;margin-left:8px}
+.hero__meta .avail{display:inline-flex;align-items:center;gap:10px;color:var(--ink-2)}
+.avail i{animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,68,51,.55)}50%{box-shadow:0 0 0 7px rgba(255,68,51,0)}}
+.hero__meta .cue{margin-left:auto;display:inline-flex;align-items:center;gap:12px}
+.cue i{position:relative;width:1px;height:28px;background:var(--rule-2);overflow:hidden}
+.cue i::after{content:"";position:absolute;left:0;top:-40%;width:1px;height:40%;background:var(--ink);animation:cue 2s cubic-bezier(.6,0,.4,1) infinite}
+@keyframes cue{to{top:100%}}
+.hero .wrap{width:100%}
+.svc__side{position:relative}
+.svc__cap{position:sticky;top:calc(80vh);margin:0;color:var(--ink-3)}
+.svc__cap b{color:var(--accent);font-weight:400}
+.foot__mark{width:min(560px,70vw);height:auto;opacity:.08;margin:0 0 28px}
+.foot{padding-top:64px}
+.foot__row{display:flex;flex-wrap:wrap;gap:16px 32px;justify-content:space-between;align-items:center}
+.foot .wrap:first-child{display:block}
+a.mail,.card .go{background:linear-gradient(var(--accent),var(--accent)) 0 100%/0 1px no-repeat;transition:background-size .4s}
+a.mail:hover,.card .go:hover{background-size:100% 1px}
+.top nav a,.btn,.card .go{cursor:pointer}
+.has-cursor,.has-cursor a,.has-cursor button{cursor:none}
+.has-cursor input,.has-cursor textarea{cursor:text}
+@media (max-width:960px){.svc__side{display:none}.hero__meta{position:static;margin-top:36px;padding:0}.hero__meta .cue{display:none}.hero{padding-bottom:56px}}
+@media (prefers-reduced-motion:reduce){.grain,.avail i,.cue i::after{animation:none}[data-split] .w>span{transform:none;transition:none}}
 </style>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
+<canvas id="field" aria-hidden="true"></canvas>
+<div class="grain" aria-hidden="true"></div>
+<div id="cursor" aria-hidden="true"></div>
 
-<header class="top"><div class="wrap">
-  <a class="mark" href="#" aria-label="Kishu Studio home"><img src="/brand/kishu-logo-dark.png" alt="Kishu Studio" width="1200" height="541"></a>
-  <nav aria-label="Sections"><a href="#services">Services</a><a href="#work">Work</a><a href="#process">Process</a><a href="#founder">Founder</a><a href="#contact">Contact</a></nav>
-  <a class="btn btn--sm" href="#contact">Get a fixed price</a>
+<header class="top" id="top"><div class="wrap">
+  <a class="logo" href="#main" aria-label="Kishu Studio, back to top"><img src="/assets/logo-light.webp" alt="Kishu Studio" width="560" height="252"></a>
+  <nav class="mono" aria-label="Sections">
+    <a href="#services" data-nav>Services</a><a href="#work" data-nav>Work</a><a href="#process" data-nav>Process</a><a href="#contact" data-nav>Contact</a>
+    <span class="sep" aria-hidden="true"></span><a class="wa" data-wa href="#contact">WhatsApp</a>
+  </nav>
 </div></header>
 
 <main id="main">
-<section class="hero"><div class="wrap grid">
-  <h1>Scrapers, automations and faster websites. <span>One fixed price, agreed in writing.</span></h1>
-  <p class="hero__by">A small studio run by Yash Panchal, between Helsinki and India. You talk to the person who does the work.</p>
-  <div class="hero__cta">
-    <a class="btn" data-wa href="#contact">Chat on WhatsApp</a>
-    <a class="btn btn--line" href="mailto:hello@kishu.studio">hello@kishu.studio</a>
+<section class="hero" data-shape="logo"><div class="wrap">
+  <p class="mono hero__label"><span class="dot"></span>Scoped. Built. Handed over.</p>
+  <h1 data-split>Scrapers, automations and faster websites. <em>One fixed price, agreed in writing.</em></h1>
+  <div class="hero__row rv">
+    <p class="hero__by">A small studio run by Yash Panchal, between Helsinki and India. You talk to the person who does the work.</p>
+    <div class="hero__cta">
+      <a class="btn" data-wa href="#contact">Chat on WhatsApp <span class="arrow">→</span></a>
+      <a class="btn btn--line" href="mailto:hello@kishu.studio">hello@kishu.studio</a>
+    </div>
   </div>
-  <ul class="facts">
+  <div class="hero__meta mono">
+    <span>Helsinki <b data-tz="Europe/Helsinki">--:--</b></span>
+    <span>India <b data-tz="Asia/Kolkata">--:--</b></span>
+    <span class="avail"><i></i>Taking new work</span>
+    <span class="cue">Scroll <i></i></span>
+  </div>
+</div></section>
+
+<section class="sec" id="principle" data-shape="scatter"><div class="wrap">
+  <p class="sec__label mono rv"><b>00</b> The principle</p>
+  <h2 data-split>One person.<br>One price.</h2>
+  <p class="statement rv">Every job starts with the result you need, and a price we both sign before work begins. <em>Nothing gets added to the bill later.</em></p>
+  <ul class="facts rv">
     <li><b>Fixed price</b>Agreed in writing before any work starts</li>
     <li><b>Daily progress</b>A short written update every working day</li>
     <li><b>Handover document</b>Your team can run it without us</li>
-    <li><b>7-day fix window</b>Anything we built breaks, we fix it free</li>
+    <li><b>7-day fix window</b>If anything we built breaks, we fix it free</li>
   </ul>
 </div></section>
 
-<section class="sec" id="services"><div class="wrap grid">
-  <div class="sec__head"><span class="n">01</span><h2>Services and prices</h2></div>
-  <div class="sec__body">
-    <p class="lead">Three kinds of work, done often enough to price them up front. Bigger jobs get a fixed project quote.</p>
-    <div class="switch" role="group" aria-label="Show prices for">
-      <button type="button" data-cur="intl" aria-pressed="true">International · USD</button>
-      <button type="button" data-cur="in" aria-pressed="false">India · INR</button>
+<section class="sec" id="services"><div class="wrap">
+  <p class="sec__label mono rv"><b>01</b> The crafts</p>
+  <h2 data-split>What we do</h2>
+  <div class="svc">
+    <ol class="svc__list">
+      <li class="svc__item" data-shape="scrape" data-name="Web scraping"><span class="mono">01 · Data</span><h3>Web scraping and data</h3>
+        <p>Any public website into clean CSV, Excel, Google Sheets or JSON: directories, catalogues, prices, reviews. Deduplicated and documented. No logins, no private individuals' data.</p><span class="from">From $45 per job</span></li>
+      <li class="svc__item" data-shape="automate" data-name="Automation"><span class="mono">02 · Automation</span><h3>Business automation</h3>
+        <p>n8n, Make and Zapier workflows with error alerts: leads into your CRM, invoices into accounting, orders into fulfilment. Built in your own account.</p><span class="from">From $65 per workflow</span></li>
+      <li class="svc__item" data-shape="speed" data-name="Speed and SEO"><span class="mono">03 · Performance</span><h3>Website speed and SEO</h3>
+        <p>Core Web Vitals, technical SEO, schema and redirects on WordPress, Shopify, Webflow, Wix or custom sites. Before and after scores, plain-English change log.</p><span class="from">From $55 per site</span></li>
+      <li class="svc__item" data-shape="build" data-name="Bigger builds"><span class="mono">04 · Bigger builds</span><h3>Websites, stores and MVPs</h3>
+        <p>Business websites, e-commerce stores, backends and APIs, full-stack MVPs and AI integrations. Quoted per project, at a fixed price.</p><span class="from">Fixed project quote</span></li>
+    </ol>
+    <div class="svc__side" aria-hidden="true"><p class="svc__cap mono" id="svc-cap"><b>01</b> / 04&nbsp;&nbsp;Web scraping</p></div>
+  </div>
+
+  <div class="prices rv" data-shape="scatter">
+    <div class="prices__head">
+      <h3>Prices</h3>
+      <div class="switch" role="group" aria-label="Show prices for">
+        <button type="button" data-cur="intl" aria-pressed="true">International · USD</button>
+        <button type="button" data-cur="in" aria-pressed="false">India · INR</button>
+      </div>
     </div>
-
     <ol class="rows" data-panel="intl">
-      <li class="row"><span class="i">01</span><h3>Web scraping and data</h3>
-        <p>Any public website into clean CSV, Excel, Google Sheets or JSON: directories, catalogues, prices, reviews. Deduplicated and documented. No logins, no private individuals' data.</p>
-        <span class="price num">from $45<small>per job</small></span></li>
-      <li class="row"><span class="i">02</span><h3>Business automation</h3>
-        <p>n8n, Make and Zapier workflows with error alerts: leads into your CRM, invoices into accounting, orders into fulfilment. Built in your own account.</p>
-        <span class="price num">from $65<small>per workflow</small></span></li>
-      <li class="row"><span class="i">03</span><h3>Website speed and SEO</h3>
-        <p>Core Web Vitals, technical SEO, schema and redirects on WordPress, Shopify, Webflow, Wix or custom sites. Before and after scores, plain-English change log.</p>
-        <span class="price num">from $55<small>per site</small></span></li>
+      <li class="row"><span class="i">01</span><h4>Web scraping and data</h4><p>A public website into a clean, documented spreadsheet or JSON file.</p><span class="price num">from $45<small>per job</small></span></li>
+      <li class="row"><span class="i">02</span><h4>Business automation</h4><p>An n8n, Make or Zapier workflow with error alerts, in your own account.</p><span class="price num">from $65<small>per workflow</small></span></li>
+      <li class="row"><span class="i">03</span><h4>Website speed and SEO</h4><p>Core Web Vitals and technical SEO, with before and after scores.</p><span class="price num">from $55<small>per site</small></span></li>
     </ol>
-
     <ol class="rows" data-panel="in" hidden>
-      <li class="row"><span class="i">01</span><h3>Business website</h3>
-        <p>A fast, mobile-first site for your shop, clinic or institute, with Google Business Profile and a WhatsApp button.</p>
-        <span class="price num">₹18,000–35,000</span></li>
-      <li class="row"><span class="i">02</span><h3>E-commerce store</h3>
-        <p>Product catalogue, cart and payments, set up so you can add products yourself.</p>
-        <span class="price num">₹35,000–75,000</span></li>
-      <li class="row"><span class="i">03</span><h3>Automation</h3>
-        <p>WhatsApp lead capture, Google Sheets, invoicing and follow-ups that run on their own.</p>
-        <span class="price num">₹8,000–25,000</span></li>
-      <li class="row"><span class="i">04</span><h3>Speed and SEO fix</h3>
-        <p>Your existing site made fast and findable on Google, with before and after scores.</p>
-        <span class="price num">₹6,000–12,000</span></li>
-      <li class="row"><span class="i">05</span><h3>Care plan</h3>
-        <p>Updates, backups, small changes and a monthly check, so the site stays fast.</p>
-        <span class="price num">₹1,500–3,000<small>per month</small></span></li>
+      <li class="row"><span class="i">01</span><h4>Business website</h4><p>A fast, mobile-first site for your shop, clinic or institute, with Google Business Profile and a WhatsApp button.</p><span class="price num">₹18,000–35,000</span></li>
+      <li class="row"><span class="i">02</span><h4>E-commerce store</h4><p>Product catalogue, cart and payments, set up so you can add products yourself.</p><span class="price num">₹35,000–75,000</span></li>
+      <li class="row"><span class="i">03</span><h4>Automation</h4><p>WhatsApp lead capture, Google Sheets, invoicing and follow-ups that run on their own.</p><span class="price num">₹8,000–25,000</span></li>
+      <li class="row"><span class="i">04</span><h4>Speed and SEO fix</h4><p>Your existing site made fast and findable on Google, with before and after scores.</p><span class="price num">₹6,000–12,000</span></li>
+      <li class="row"><span class="i">05</span><h4>Care plan</h4><p>Updates, backups, small changes and a monthly check, so the site stays fast.</p><span class="price num">₹1,500–3,000<small>per month</small></span></li>
     </ol>
-
     <p class="note"><b>Bigger builds</b> such as backend and API development, full-stack MVPs and AI integrations are quoted per project, at a fixed price. <b>Agencies:</b> we deliver under your brand, on your timeline. Ask for overflow pricing.</p>
   </div>
 </div></section>
 
-<section class="sec" id="work"><div class="wrap grid">
-  <div class="sec__head"><span class="n">02</span><h2>Selected work</h2></div>
-  <div class="sec__body">
-    <p class="lead">Built the way we build for clients: fast, mobile-first, no page builders.</p>
-    <ul class="work">
-      <li><h3>Jewellery brand<small>Website and shop · demo brand</small></h3>
-        <p>Scroll-driven story with a real-time 3D diamond, a shop with a 360° viewer and live metal switching.</p>
-        <a class="go" href="/work/jewellery/">Open the demo →</a></li>
-      <li><h3>Restaurant<small>Website, bookings, admin</small></h3>
-        <p>Finnish and English site with table booking and an admin panel the owner edits without a developer.</p>
-        <a class="go" href="#contact">Ask to see it →</a></li>
-      <li><h3>Local Lead List Kit<small>Data product · €19</small></h3>
-        <p>A Google Maps extractor and a scoring script that turn a city and a category into a clean contact list.</p>
-        <a class="go" href="https://kishustudio.gumroad.com/l/local-lead-list-kit" rel="noopener">See on Gumroad →</a></li>
-    </ul>
-  </div>
-</div></section>
-
-<section class="sec" id="process"><div class="wrap grid">
-  <div class="sec__head"><span class="n">03</span><h2>How a job runs</h2></div>
-  <div class="sec__body">
-    <p class="lead">The same four steps for a $45 spreadsheet or a month-long build.</p>
-    <ol class="steps">
-      <li><b>1</b><h3>Scope</h3><p>You describe the result you want. We confirm scope, price and date in writing, usually the same day.</p></li>
-      <li><b>2</b><h3>Access</h3><p>You invite us as a collaborator or editor. We never ask for your passwords.</p></li>
-      <li><b>3</b><h3>Build</h3><p>A short written update every working day until it is done.</p></li>
-      <li><b>4</b><h3>Handover</h3><p>The work, a handover document, and seven days in which fixes are free.</p></li>
-    </ol>
-  </div>
-</div></section>
-
-<section class="sec" id="promise"><div class="wrap grid">
-  <div class="sec__head"><span class="n">04</span><h2>What we promise</h2></div>
-  <div class="sec__body">
-    <ol class="promise">
-      <li><span>a</span>The price is fixed and agreed in writing before work starts.</li>
-      <li><span>b</span>You get a written progress update every working day.</li>
-      <li><span>c</span>Every job ends with a handover document.</li>
-      <li><span>d</span>Fixes are free for seven days after delivery.</li>
-      <li><span>e</span>We never ask for your passwords.</li>
-    </ol>
-  </div>
-</div></section>
-
-<section class="sec" id="founder"><div class="wrap grid">
-  <div class="sec__head"><span class="n">05</span><h2>Who you work with</h2></div>
-  <div class="sec__body">
-    <div class="founder">
-      
-      <div>
-        <div class="letter">
-          <p>I started Kishu Studio for the technical work small businesses keep postponing: the list, the automation, the slow website.</p>
-          <p>Before I start, we agree the price in writing, and while I work you hear from me every day.</p>
-          <p>When it is finished you get a handover, so you never depend on me to run it.</p>
-          <p>If something I built breaks in the first week, I fix it at no cost.</p>
-        </div>
-        <p class="sign"><b>Yash Panchal</b>Founder, Kishu Studio · Helsinki and India</p>
+<section class="sec" id="work" data-shape="scatter"><div class="wrap">
+  <p class="sec__label mono rv"><b>02</b> The work</p>
+  <h2 data-split>Selected work</h2>
+  <p class="statement rv">Built the way we build for clients: fast, mobile-first, no page builders.</p>
+  <div class="work">
+    <article class="card rv">
+      <span class="mono">01 · <b>Orvane</b> · Luxury jewellery · demo brand</span>
+      <h3>Website and shop</h3>
+      <a class="card__img" href="/work/jewellery/"><img src="/assets/work-jewellery.webp" alt="Orvane jewellery website: a 3D diamond above the headline 'Your search ends here.'" width="1200" height="750" loading="lazy"></a>
+      <blockquote>“The piece first, in three dimensions.”</blockquote>
+      <p>A scroll-driven story with a real-time 3D diamond, and a shop with a 360° viewer and live metal switching.</p>
+      <a class="go" href="/work/jewellery/">Open the demo <span class="arrow">→</span></a>
+    </article>
+    <article class="card rv">
+      <span class="mono">02 · <b>Restaurant</b> · Hospitality · Helsinki</span>
+      <h3>Website, bookings and TV menu</h3>
+      <div class="card__img card__img--private">
+        <div class="tv" aria-hidden="true"><i class="tv__ph"></i><b>Lounas</b><em>11–14</em><span></span><span></span><span class="s"></span><span></span><span class="s"></span><span></span></div>
+        <div class="tv tv--b" aria-hidden="true"><i class="tv__ph tv__ph--b"></i><b>À la carte</b><em>14–23</em><span></span><span class="s"></span><span></span><span></span><span class="s"></span><span></span></div>
+        <span class="mono tag">Client work · shown on request</span>
       </div>
-    </div>
-    <dl class="legal">
-      <div><dt>Company</dt><dd>Kishu Studio is a business line of CodFleet.</dd></div>
-      <div data-ph><dt>Finland</dt><dd>Business ID <span class="num">FI-BUSINESS-ID</span></dd></div>
-      <div data-ph><dt>India</dt><dd>MSME Udyam <span class="num">UDYAM-NO</span></dd></div>
-    </dl>
+      <blockquote>“Menu and booking, one tap away.”</blockquote>
+      <p>A Finnish and English site with table booking and an owner's admin panel, plus a portrait menu screen for the entrance that switches from lunch to à la carte on its own.</p>
+      <a class="go" href="#contact">Ask to see it <span class="arrow">→</span></a>
+    </article>
+    <article class="card rv">
+      <span class="mono">03 · <b>Lead List Kit</b> · Data product · €19</span>
+      <h3>Local lead lists in fifteen minutes</h3>
+      <a class="card__img" href="https://kishustudio.gumroad.com/l/local-lead-list-kit" rel="noopener"><img src="/assets/work-kit.webp" alt="Local Lead List Kit cover" width="1200" height="750" loading="lazy"></a>
+      <blockquote>“From a city and a category to a clean list.”</blockquote>
+      <p>A Google Maps extractor and a scoring script for freelancers and small agencies who sell to local businesses.</p>
+      <a class="go" href="https://kishustudio.gumroad.com/l/local-lead-list-kit" rel="noopener">See on Gumroad <span class="arrow">→</span></a>
+    </article>
   </div>
 </div></section>
 
-<section class="sec contact" id="contact"><div class="wrap grid">
-  <h2 class="big">Tell us what you need. You get a fixed price back.</h2>
-  <div class="contact__ways">
-    <a class="btn" data-wa href="mailto:hello@kishu.studio">Chat on WhatsApp</a>
-    <a class="btn btn--line" href="mailto:hello@kishu.studio">hello@kishu.studio</a>
-    <p>Replies within one working day, usually much sooner. Links, screenshots and deadlines help us price it right.</p>
+<section class="sec" id="process" data-shape="scatter"><div class="wrap">
+  <p class="sec__label mono rv"><b>03</b> The method</p>
+  <h2 data-split>How a job runs</h2>
+  <p class="statement rv">The same four steps for a $45 spreadsheet or a month-long build.</p>
+  <ol class="steps rv">
+    <li><b>Step 01</b><h3>Scope</h3><p>You describe the result you want. We confirm scope, price and date in writing, usually the same day.</p></li>
+    <li><b>Step 02</b><h3>Access</h3><p>You invite us as a collaborator or editor. We never ask for your passwords.</p></li>
+    <li><b>Step 03</b><h3>Build</h3><p>A short written update every working day until it is done.</p></li>
+    <li><b>Step 04</b><h3>Handover</h3><p>The work, a handover document, and seven days in which fixes are free.</p></li>
+  </ol>
+  <ol class="promise rv">
+    <li><span>a</span>The price is fixed and agreed in writing before work starts.</li>
+    <li><span>b</span>You get a written progress update every working day.</li>
+    <li><span>c</span>Every job ends with a handover document.</li>
+    <li><span>d</span>Fixes are free for seven days after delivery.</li>
+    <li><span>e</span>We never ask for your passwords.</li>
+  </ol>
+</div></section>
+
+<section class="sec" id="who" data-shape="scatter"><div class="wrap">
+  <p class="sec__label mono rv"><b>04</b> Who</p>
+  <h2 data-split>A studio.<br>One person to talk to.</h2>
+  <div class="letter rv">
+    <p>I started Kishu Studio for the technical work small businesses keep postponing: the list, the automation, the slow website.</p>
+    <p>Before I start, we agree the price in writing, and while I work you hear from me every day.</p>
+    <p>When it is finished you get a handover, so you never depend on me to run it.</p>
+    <p>If something I built breaks in the first week, I fix it at no cost.</p>
   </div>
-  <div class="contact__form"><form id="inquiry-form" class="inq" novalidate>
+  <p class="sign rv"><b>Yash Panchal</b>Founder, Kishu Studio · Helsinki and India</p>
+  <dl class="legal rv">
+    <div><dt>Company</dt><dd>Kishu Studio is a business line of CodFleet.</dd></div>
+    <div data-ph><dt>Finland</dt><dd>Business ID <span class="num">FI-BUSINESS-ID</span></dd></div>
+    <div data-ph><dt>India</dt><dd>MSME Udyam <span class="num">UDYAM-NO</span></dd></div>
+  </dl>
+</div></section>
+
+<section class="sec contact" id="contact" data-shape="scatter"><div class="wrap">
+  <p class="sec__label mono rv"><b>05</b> Talk</p>
+  <h2 data-split>Tell us what you need. You get a fixed price back.</h2>
+  <div class="contact__grid">
+    <div class="contact__ways rv">
+      <a class="btn" data-wa href="mailto:hello@kishu.studio">Chat on WhatsApp <span class="arrow">→</span></a>
+      <a class="mail" href="mailto:hello@kishu.studio">hello@kishu.studio</a>
+      <p>Replies within one working day, usually much sooner. Links, screenshots and deadlines help us price it right.</p>
+    </div>
+    <div class="contact__form rv"><form id="inquiry-form" class="inq" novalidate>
 <div class="inq__row"><label>Your name<input name="name" type="text" required autocomplete="name"></label><label>Email<input name="email" type="email" required autocomplete="email"></label></div>
 <div class="inq__row"><label>WhatsApp number (with country code)<input name="whatsapp" type="tel" autocomplete="tel"></label><label>Business name and city<input name="business" type="text"></label></div>
 <label>What do you need, and by when?<textarea name="message" rows="5" required placeholder="Website, e-commerce, app, automation, speed or SEO fix. Links help."></textarea></label>
 <div class="inq__row"><label>Budget range (optional)<input name="budget" type="text" placeholder="e.g. ₹25,000 or $500"></label><div class="inq__submit"><button type="submit">Send enquiry</button><small>Reply within one working day. Prefer email? hello@kishu.studio</small></div></div>
 </form></div>
+  </div>
 </div></section>
 </main>
 
-<footer class="foot"><div class="wrap">
-  <span><img src="/brand/kishu-logo-dark.png" alt="Kishu Studio" width="1200" height="541">© 2026 Kishu Studio, a business line of CodFleet</span>
-  <nav aria-label="Elsewhere"><a href="mailto:hello@kishu.studio">hello@kishu.studio</a><a href="https://www.fiverr.com/kishu_studio" rel="noopener">Fiverr</a><a href="https://kishustudio.gumroad.com" rel="noopener">Gumroad</a></nav>
+<footer class="foot"><div class="wrap"><img class="foot__mark" src="/assets/logo-light.webp" alt="" width="560" height="252" loading="lazy"></div><div class="wrap mono foot__row">
+  <span>© 2026 Kishu Studio · a business line of CodFleet</span>
+  <nav aria-label="Elsewhere"><a href="mailto:hello@kishu.studio">Email</a><a href="https://www.fiverr.com/kishu_studio" rel="noopener">Fiverr</a><a href="https://kishustudio.gumroad.com" rel="noopener">Gumroad</a></nav>
 </div></footer>
 
 <script>
 // Contact details. Placeholders stay hidden on the page until real values are filled in here.
-var WHATSAPP = '918460002220'; // international format, digits only, e.g. 3584xxxxxxxx or 91xxxxxxxxxx
+var WHATSAPP = '918460002220'; // international format, digits only
 (function () {
   var wa = WHATSAPP.replace(/\D/g, '');
   var links = document.querySelectorAll('[data-wa]');
@@ -333,12 +459,11 @@ var WHATSAPP = '918460002220'; // international format, digits only, e.g. 3584xx
       links[i].href = 'https://wa.me/' + wa + '?text=' + encodeURIComponent('Hi Yash, I found Kishu Studio and would like a fixed price for: ');
       links[i].target = '_blank'; links[i].rel = 'noopener';
     } else {
-      links[i].hidden = true; // no number yet: email becomes the main button
+      links[i].hidden = true;
       var next = links[i].nextElementSibling;
       if (next) next.className = next.className.replace(' btn--line', '');
     }
   }
-  // Legal IDs: hide the row while it still holds a placeholder
   var ph = document.querySelectorAll('[data-ph]');
   for (var j = 0; j < ph.length; j++) if (/FI-BUSINESS-ID|UDYAM-NO/.test(ph[j].textContent)) ph[j].hidden = true;
 
@@ -352,6 +477,8 @@ var WHATSAPP = '918460002220'; // international format, digits only, e.g. 3584xx
   try { if (/Asia\/(Kolkata|Calcutta)/.test(Intl.DateTimeFormat().resolvedOptions().timeZone)) show('in'); } catch (e) {}
 })();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js" defer></script>
+<script src="/assets/site.js" defer></script>
 <script src="/inquiry-form.js" defer></script>
 </body>
 </html>
