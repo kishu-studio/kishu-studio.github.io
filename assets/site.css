@@ -8,7 +8,7 @@
   --rule: rgba(17, 18, 22, .12);
   --accent: #C5283D;
   --punch: #3A2F22;
-  --sans: "Switzer", "Helvetica Neue", Arial, sans-serif;
+  --sans: "Switzer", "Noto Sans Gujarati", "Helvetica Neue", Arial, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
   --wrap: min(1060px, 90vw);
   --col: min(472px, 100%);
@@ -33,6 +33,7 @@ img { display: block; max-width: 100%; height: auto; }
 .field-back { z-index: 0; }
 .field-front { z-index: 3; }
 main, .foot { position: relative; z-index: 1; }
+main { overflow-x: clip; }
 
 /* header: hides while scrolling down, returns on the way up */
 .site-header { position: fixed; top: 0; left: 0; right: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 14px calc((100vw - var(--wrap)) / 2); transition: transform .5s cubic-bezier(.2,.7,.2,1), background .4s; }
@@ -206,3 +207,66 @@ em { font-style: italic; color: var(--accent); }
   .rv { opacity: 1; transform: none; transition: none; }
   .projet-media img { transition: none; }
 }
+
+/* ── Gujarat hub ─────────────────────────────────────────────────── */
+.gu { font-family: "Noto Sans Gujarati", var(--sans); }
+.hero h1.page-h1 { position: static; width: auto; height: auto; overflow: visible; clip: auto; white-space: normal; margin: 0; max-width: 15em; font-weight: 600; font-size: clamp(34px, 4.2vw, 60px); line-height: 1.05; letter-spacing: -.03em; }
+.hero .hero-anchor.small { width: min(420px, 70%); margin: 0 0 30px; }
+.tagline { margin: 22px 0 0 !important; max-width: 640px !important; font-size: clamp(19px, 1.6vw, 23px) !important; line-height: 1.5 !important; }
+.tagline .gu { font-weight: 600; color: var(--accent); }
+.boxes { list-style: none; margin: 36px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--ink); }
+.boxes li { padding: 22px 24px 26px 0; border-right: 1px solid var(--rule); }
+.boxes li + li { padding-left: 24px; }
+.boxes li:last-child { border-right: 0; }
+.boxes .meta { margin-bottom: 14px; }
+.boxes h3 { margin: 0 0 10px; font-weight: 600; font-size: 24px; letter-spacing: -.02em; }
+.boxes p { margin: 0 0 18px; font-size: 15.5px; color: var(--ink-dim); }
+.boxes .from { font: 400 12px var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+.boxes .from b { font: 600 22px var(--sans); letter-spacing: -.01em; text-transform: none; margin-left: 6px; color: var(--ink); }
+.boxes a.more { display: inline-block; margin-top: 14px; font: 400 11.5px var(--mono); letter-spacing: .16em; text-transform: uppercase; border-bottom: 1px solid var(--accent); padding-bottom: 3px; }
+.care .ring-anchor, #care .ring-anchor { width: 46%; }
+.care { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 50px; align-items: start; }
+.plans { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--ink); }
+.plans li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 24px; padding: 20px 0; border-bottom: 1px solid var(--rule); }
+.plans h3 { margin: 0; font-weight: 600; font-size: 22px; }
+.plans .p { font: 600 24px var(--sans); white-space: nowrap; }
+.plans .p small { font: 400 11px var(--mono); letter-spacing: .14em; color: var(--ink-dim); text-transform: uppercase; margin-left: 4px; }
+.plans p { grid-column: 1 / -1; margin: 0; font-size: 15.5px; color: var(--ink-dim); }
+.faq { margin: 30px 0 0; max-width: 760px; border-top: 1px solid var(--ink); }
+.faq details { border-bottom: 1px solid var(--rule); }
+.faq summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; gap: 20px; padding: 20px 0; font-size: 19px; font-weight: 500; letter-spacing: -.01em; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; font-weight: 400; color: var(--accent); }
+.faq details[open] summary::after { content: "–"; }
+.faq details p { margin: 0 0 20px; max-width: 640px; font-size: 16.5px; color: var(--ink-dim); }
+.menu-box { margin-top: 56px; }
+.menu-box h3 { display: flex; align-items: baseline; gap: 14px; margin: 0 0 14px; font-weight: 600; font-size: clamp(24px, 2.2vw, 30px); letter-spacing: -.02em; }
+.menu-box h3 .meta { margin: 0; }
+.menu-rows { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--ink); }
+.menu-rows li { display: grid; grid-template-columns: minmax(0, 1.6fr) 150px 110px; gap: 24px; align-items: baseline; padding: 18px 0; border-bottom: 1px solid var(--rule); }
+.menu-rows .n { font-size: 18.5px; }
+.menu-rows .n small { display: block; margin-top: 4px; font-size: 14.5px; color: var(--ink-dim); }
+.menu-rows .p { font: 600 21px var(--sans); text-align: right; white-space: nowrap; }
+.menu-rows .t { font: 400 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-dim); text-align: right; }
+.menu-head { display: grid; grid-template-columns: minmax(0, 1.6fr) 150px 110px; gap: 24px; padding: 0 0 8px; font: 400 10.5px var(--mono); letter-spacing: .18em; text-transform: uppercase; color: var(--ink-faint); }
+.menu-head span:not(:first-child) { text-align: right; }
+.rules { list-style: none; margin: 24px 0 0; padding: 0; max-width: 760px; }
+.rules li { position: relative; padding: 10px 0 10px 22px; font-size: 16.5px; color: var(--ink-dim); border-bottom: 1px solid var(--rule); }
+.rules li::before { content: ""; position: absolute; left: 0; top: 19px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.crumbs { margin: 0 0 20px; font: 400 11px var(--mono); letter-spacing: .18em; text-transform: uppercase; color: var(--ink-dim); }
+.crumbs a { border-bottom: 1px solid var(--rule); }
+.cta-band { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px; margin-top: 60px; padding: 30px 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+.cta-band p { margin: 0 !important; font-size: clamp(20px, 1.8vw, 26px) !important; letter-spacing: -.015em; }
+.in-banner { width: var(--wrap); margin: 92px auto 0; padding: 12px 0; border-bottom: 1px solid var(--rule); font: 400 11.5px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-dim); position: relative; z-index: 2; }
+.in-banner a { color: var(--ink); border-bottom: 1px solid var(--accent); }
+@media (max-width: 860px) {
+  .boxes { grid-template-columns: minmax(0, 1fr); }
+  .boxes li, .boxes li + li { padding: 22px 0; border-right: 0; border-bottom: 1px solid var(--rule); }
+  .care { grid-template-columns: minmax(0, 1fr); }
+  #care .ring-anchor { width: 100%; height: 45%; }
+  .menu-rows li, .menu-head { grid-template-columns: minmax(0, 1fr) auto; }
+  .menu-rows .t { grid-column: 1 / -1; text-align: left; }
+  .menu-head span:nth-child(3) { display: none; }
+}
+.prix-gu { margin: 22px 0 0 !important; font: 400 12px/1.6 var(--mono) !important; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-dim); }
+.prix-gu a { color: var(--ink); border-bottom: 1px solid var(--accent); }

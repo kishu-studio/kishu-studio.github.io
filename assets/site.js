@@ -9,7 +9,7 @@
   // ── Contact details and placeholders ──
   var wa = (window.WHATSAPP || '').replace(/\D/g, '');
   $$('[data-wa]').forEach(function (a) {
-    if (wa.length >= 8) { a.href = 'https://wa.me/' + wa + '?text=' + encodeURIComponent('Hi Yash, I found Kishu Studio and would like a fixed price for: '); a.target = '_blank'; a.rel = 'noopener'; }
+    if (wa.length >= 8) { a.href = 'https://wa.me/' + wa + '?text=' + encodeURIComponent(a.getAttribute('data-wa-text') || 'Hi Yash, I found Kishu Studio and would like a fixed price for: '); a.target = '_blank'; a.rel = 'noopener'; }
     else a.hidden = true;
   });
   $$('[data-ph]').forEach(function (el) { if (/FI-BUSINESS-ID|UDYAM-NO/.test(el.textContent)) el.hidden = true; });
@@ -205,6 +205,7 @@
     var dyn = name === 'ring' || name === 'stream';
     var pts = dyn ? null : name === 'drift' ? [] : getShapePoints(name);
     if (!dyn && (!pts || !pts.length)) { shape = { name: name, anchor: null, pts: [], dyn: false }; assign(0); return; }
+    if (!anchors[anchorKey]) { shape = { name: name, anchor: null, pts: [], dyn: false }; assign(0); return; }   // page has no anchor for this shape: plain drift
     shape = { name: name, anchor: anchors[anchorKey], pts: pts, dyn: dyn };
     var use = dyn ? Math.round(parts.length * (name === 'stream' ? .42 : .55)) : Math.min(pts.length, Math.round(parts.length * (name === 'logo' ? .9 : .78)));
     assign(use);
