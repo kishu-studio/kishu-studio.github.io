@@ -165,6 +165,25 @@
         g.fillRect(x + 26, y + 200, 100, 30);
       }), 436, 400, white, 5);
     },
+    cart: function () {
+      return sampleCanvas(canvasFor(436, 400, function (g) {
+        g.lineWidth = 8; g.beginPath(); g.moveTo(40, 80); g.lineTo(96, 80); g.lineTo(140, 270); g.lineTo(350, 270); g.lineTo(390, 130); g.lineTo(112, 130); g.stroke();
+        g.lineWidth = 6; for (var k = 1; k < 4; k++) { g.beginPath(); g.moveTo(112 + k * 62, 130); g.lineTo(130 + k * 56, 270); g.stroke(); }
+        g.beginPath(); g.moveTo(124, 200); g.lineTo(368, 200); g.stroke();
+        [[170, 320], [320, 320]].forEach(function (c) { g.beginPath(); g.arc(c[0], c[1], 22, 0, 6.283); g.fill(); });
+      }), 436, 400, white, 5);
+    },
+    gem: function () {
+      return sampleCanvas(canvasFor(436, 400, function (g) {
+        g.lineWidth = 7; var t = 110, m = 160, b = 340, cx = 218;
+        g.beginPath(); g.moveTo(108, t); g.lineTo(328, t); g.lineTo(398, m); g.lineTo(cx, b); g.lineTo(38, m); g.closePath(); g.stroke();
+        g.beginPath(); g.moveTo(38, m); g.lineTo(398, m); g.stroke();
+        g.lineWidth = 5; g.beginPath();
+        g.moveTo(108, t); g.lineTo(150, m); g.lineTo(cx, t); g.lineTo(286, m); g.lineTo(328, t);
+        g.moveTo(150, m); g.lineTo(cx, b); g.lineTo(286, m); g.stroke();
+        for (var k = 0; k < 6; k++) { var a = k * 1.047; g.beginPath(); g.moveTo(cx + Math.cos(a) * 24, 56 + Math.sin(a) * 24); g.lineTo(cx + Math.cos(a) * 40, 56 + Math.sin(a) * 40); g.stroke(); }
+      }), 436, 400, white, 5);
+    },
     sign: function () {
       return sampleCanvas(canvasFor(600, 470, function (g) {
         g.font = '300px "Mrs Saint Delafield", cursive'; g.textBaseline = 'alphabetic';
