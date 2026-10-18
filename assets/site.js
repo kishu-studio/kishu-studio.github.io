@@ -71,15 +71,36 @@
   function rnd(a, b) { return a + Math.random() * (b - a); }
   function gauss() { return (Math.random() + Math.random() + Math.random() - 1.5) / 1.5; }
 
-  // glow sprites, warm ivory like the text
-  function sprite(px, core, rgb) {
-    var c = document.createElement('canvas'); c.width = c.height = px;
-    var g = c.getContext('2d'), r = px / 2, gr = g.createRadialGradient(r, r, 0, r, r, r);
-    gr.addColorStop(0, 'rgba(' + rgb + ',1)'); gr.addColorStop(core, 'rgba(' + rgb + ',.95)');
-    gr.addColorStop(Math.min(.95, core * 2.6), 'rgba(' + rgb + ',.22)'); gr.addColorStop(1, 'rgba(' + rgb + ',0)');
-    g.fillStyle = gr; g.fillRect(0, 0, px, px); return c;
+  // Particle sprites: crisp ink dots rendered at device resolution. Near particles are sharp,
+  // far ones are softer (shallow depth of field). Sizes are in CSS px.
+  var INK = '17,18,22';
+  function dotSprite(px, soft, rgb) {
+    var s = Math.ceil(px * 2 * Math.min(devicePixelRatio || 1, 2)) + 4, c = document.createElement('canvas'); c.width = c.height = s;
+    var g = c.getContext('2d'), r = s / 2, gr = g.createRadialGradient(r, r, 0, r, r, r - 1);
+    var edge = 1 - soft;
+    gr.addColorStop(0, 'rgba(' + rgb + ',1)'); gr.addColorStop(Math.max(.05, edge * .55), 'rgba(' + rgb + ',1)');
+    gr.addColorStop(Math.min(.98, edge * .55 + .04 + soft * .5), 'rgba(' + rgb + ',' + (soft > .5 ? .35 : .9) + ')');
+    gr.addColorStop(1, 'rgba(' + rgb + ',0)');
+    g.fillStyle = gr; g.fillRect(0, 0, s, s); return c;
   }
-  var SPR = { dust: sprite(16, .22, '245,238,220'), mid: sprite(32, .16, '250,240,218'), bokeh: sprite(64, .1, '255,236,206'), red: sprite(32, .3, '214,46,66') };
+  var SPR;
+  function buildSprites() {
+    SPR = { sharp: dotSprite(6, .12, INK), mid: dotSprite(6, .45, INK), soft: dotSprite(10, .9, INK), red: dotSprite(6, .15, '197,40,61') };
+  }
+  buildSprites();
+
+  // 2D simplex noise (Gustavson), used for the flow field the free particles drift on
+  var perm = new Uint8Array(512), grad = [[1,1],[-1,1],[1,-1],[-1,-1],[1,0],[-1,0],[0,1],[0,-1]];
+  (function () { var p = []; for (var i = 0; i < 256; i++) p[i] = i; for (i = 255; i > 0; i--) { var j = (Math.random() * (i + 1)) | 0, t = p[i]; p[i] = p[j]; p[j] = t; } for (i = 0; i < 512; i++) perm[i] = p[i & 255]; })();
+  function noise2(x, y) {
+    var F2 = .3660254, G2 = .2113249, s = (x + y) * F2, i = Math.floor(x + s), j = Math.floor(y + s), t = (i + j) * G2;
+    var x0 = x - (i - t), y0 = y - (j - t), i1 = x0 > y0 ? 1 : 0, j1 = 1 - i1;
+    var x1 = x0 - i1 + G2, y1 = y0 - j1 + G2, x2 = x0 - 1 + 2 * G2, y2 = y0 - 1 + 2 * G2, ii = i & 255, jj = j & 255, n = 0;
+    var t0 = .5 - x0 * x0 - y0 * y0; if (t0 > 0) { var g0 = grad[perm[ii + perm[jj]] & 7]; t0 *= t0; n += t0 * t0 * (g0[0] * x0 + g0[1] * y0); }
+    var t1 = .5 - x1 * x1 - y1 * y1; if (t1 > 0) { var g1 = grad[perm[ii + i1 + perm[jj + j1]] & 7]; t1 *= t1; n += t1 * t1 * (g1[0] * x1 + g1[1] * y1); }
+    var t2 = .5 - x2 * x2 - y2 * y2; if (t2 > 0) { var g2 = grad[perm[ii + 1 + perm[jj + 1]] & 7]; t2 *= t2; n += t2 * t2 * (g2[0] * x2 + g2[1] * y2); }
+    return 70 * n;
+  }
 
   // ── shape sources: each returns points normalised to its anchor box (0..1) ──
   var cache = {};
@@ -96,13 +117,14 @@
     draw(g, w, h); return c;
   }
   var white = function (r, g, b, a) { return a > 140 && r > 150; };
-  var logoImg = new Image(); logoImg.src = '/assets/logo-white.svg';
+  var dark = function (r, g, b, a) { return a > 140 && r < 110; };
+  var logoImg = new Image(); logoImg.src = '/assets/logo-black.svg';
   var SHAPES = {
     logo: function () {
       if (!logoImg.complete || !logoImg.naturalWidth) return null;
       var w = 900, h = Math.round(900 * 642 / 2400);
       var c = canvasFor(w, h, function (g) { g.drawImage(logoImg, 0, 0, w, h); });
-      return sampleCanvas(c, w, h, white, 3);   // white "Kishu" only, so "Studio" stays cut out
+      return sampleCanvas(c, w, h, dark, 3);   // the black "Kishu" only, so "Studio" stays cut out
     },
     sheet: function () {
       return sampleCanvas(canvasFor(436, 400, function (g) {
@@ -193,24 +215,26 @@
     var pts = shape && shape.pts && shape.pts.length ? shape.pts : null, stride = pts ? pts.length / Math.max(use, 1) : 0;
     parts.forEach(function (p, k) {
       p.on = k < use;
-      if (p.on && pts) { var q = pts[Math.floor(k * stride)]; p.nx = q[0] + rnd(-.002, .002); p.ny = q[1] + rnd(-.002, .002); }
+      if (p.on && pts) { var q = pts[Math.floor(k * stride)]; p.nx = q[0] + rnd(-.0015, .0015); p.ny = q[1] + rnd(-.0015, .0015); }
+      p.delay = now0() + (p.on ? rnd(0, 650) : 0);   // particles leave one after another, not all at once
       if (p.on && shape.dyn) { p.u = Math.random(); p.v = gauss(); }
       p.red = false;
     });
     parts[0].red = true;   // one red point, always
   }
 
+  function now0() { return performance.now(); }
   function newPart() {
     var z = Math.random();
     return { x: rnd(0, W), y: rnd(0, H), vx: 0, vy: 0, fx: rnd(0, W), fy: rnd(0, H), z: rnd(.2, 1),
-      kind: z > .965 ? 'bokeh' : z > .72 ? 'mid' : 'dust', layer: Math.random() < .14 ? 1 : 0,
+      kind: z > .93 ? 'soft' : z > .6 ? 'mid' : 'sharp', layer: Math.random() < .05 ? 1 : 0, delay: 0, ph: rnd(0, 1000),
       tw: rnd(0, 6.283), sp: rnd(.6, 1.4), on: false, nx: 0, ny: 0, u: 0, v: 0, red: false };
   }
   function resize() {
-    DPR = Math.min(devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight;
+    DPR = Math.min(devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight; buildSprites();
     [back, front].forEach(function (c) { c.width = W * DPR; c.height = H * DPR; });
     cb.setTransform(DPR, 0, 0, DPR, 0, 0); cf.setTransform(DPR, 0, 0, DPR, 0, 0);
-    var want = Math.round(Math.min(2200, Math.max(700, W * H / 620)));
+    var want = Math.round(Math.min(2400, Math.max(800, W * H / 560)));
     while (parts.length < want) parts.push(newPart());
     parts.length = want;
     var s = shape; shape = null; if (s) setScene(scene, icon);
@@ -241,7 +265,7 @@
   }
 
   // ── render ──
-  var running = true, looping = false, last = 0;
+  var running = true, looping = false, last = 0, ghostA = 0;
   function start() { if (!looping && running && !reduce) { looping = true; requestAnimationFrame(frame); } }
   function target(p, now, r) {
     if (shape.dyn) return shape.name === 'ring' ? ringPos(p, now, r) : streamPos(p, now, r);
@@ -249,34 +273,54 @@
   }
   function frame(now) {
     if (!running) { looping = false; return; }
-    var dt = Math.min(2, (now - last) / 16.67 || 1); last = now;
-    vel = vel * .85 + (scrollY - lastScroll) * .15; lastScroll = scrollY;
+    var dt = Math.min(2.2, (now - last) / 16.67 || 1); last = now;
+    vel = vel * .88 + (scrollY - lastScroll) * .12; lastScroll = scrollY;
     cb.clearRect(0, 0, W, H); cf.clearRect(0, 0, W, H);
     var r = shape && shape.anchor ? shape.anchor.getBoundingClientRect() : null;
+    var tt = now * .00005;
+    if (shape && shape.name === 'logo' && r && logoImg.naturalWidth) {   // a faint solid logo behind the particles, for legibility
+      ghostA += (.075 - ghostA) * .04; cb.globalAlpha = ghostA; cb.drawImage(logoImg, r.left, r.top, r.width, r.height); cb.globalAlpha = 1;
+    } else ghostA *= .9;
     for (var i = 0; i < parts.length; i++) {
-      var p = parts[i], tx, ty;
-      if (p.on && r) { var t = target(p, now, r); tx = t[0]; ty = t[1]; }
-      else {
-        p.fx += Math.sin(now / 5000 * p.sp + i) * .07; p.fy += Math.cos(now / 5600 * p.sp + i) * .07 - vel * p.z * .14;
-        if (p.fy < -30) { p.fy += H + 60; p.y += H + 60; } else if (p.fy > H + 30) { p.fy -= H + 60; p.y -= H + 60; }
-        if (p.fx < -30) p.fx += W + 60; else if (p.fx > W + 30) p.fx -= W + 60;
-        tx = p.fx; ty = p.fy;
+      var p = parts[i], ax, ay;
+      if (p.on && r && now >= p.delay) {
+        // spring towards the shape, then a slow breathing offset from the noise field
+        var t = target(p, now, r);
+        var br = shape.dyn ? 0 : 1.6;
+        var tx = t[0] + noise2(p.ph, tt * 6) * br, ty = t[1] + noise2(p.ph + 50, tt * 6) * br;
+        ax = (tx - p.x) * .045; ay = (ty - p.y) * .045;
+        p.vx = (p.vx + ax * dt) * .84; p.vy = (p.vy + ay * dt) * .84;
+      } else {
+        // free: drift on a flowing current (curl of the noise field), slower for far particles
+        var sc = .0018, e = .6, nx = p.x * sc, ny = p.y * sc;
+        var cx = noise2(nx, ny + e + tt) - noise2(nx, ny - e + tt), cy = noise2(nx - e + tt, ny) - noise2(nx + e + tt, ny);
+        var sp = .55 * (.35 + p.z);
+        p.vx += (cy * sp - p.vx) * .04 * dt; p.vy += (-cx * sp - p.vy) * .04 * dt;
+        p.vy -= vel * p.z * .02;   // depth parallax against the scroll
       }
-      var k = p.on ? (shape && shape.dyn ? .07 : .055) : .03;
-      var ax = (tx - p.x) * k, ay = (ty - p.y) * k;
+      // the pointer parts the field like a hand through water
       var dx = p.x - mouse.x, dy = p.y - mouse.y, d2 = dx * dx + dy * dy;
-      if (d2 < 14000) { var f = (14000 - d2) / 14000 * 2.6, dd = Math.sqrt(d2) || 1; ax += dx / dd * f; ay += dy / dd * f; }
-      p.vx = (p.vx + ax * dt) * .82; p.vy = (p.vy + ay * dt) * .82;
+      if (d2 < 16000) { var f = (1 - d2 / 16000), dd = Math.sqrt(d2) || 1; f = f * f * 1.6; p.vx += dx / dd * f * dt; p.vy += dy / dd * f * dt; }
       p.x += p.vx * dt; p.y += p.vy * dt;
-      if (p.y < -40 || p.y > H + 40) continue;
-      var tw = .62 + .38 * Math.sin(now / 1000 * p.sp + p.tw), spr, size, a;
-      var big = p.on && shape && shape.name === 'logo' ? 1.35 : 1;
-      if (p.red) { spr = SPR.red; size = 18; a = 1; }
-      else if (p.kind === 'bokeh') { spr = SPR.bokeh; size = p.on ? 22 * big : 10 + 10 * p.z; a = (p.on ? .7 : .2) * tw; }
-      else if (p.kind === 'mid') { spr = SPR.mid; size = p.on ? 10 * big : 4 + 3 * p.z; a = (p.on ? .95 : .4) * tw; }
-      else { spr = SPR.dust; size = p.on ? 5.5 * big : 2.6 + 2 * p.z; a = (p.on ? 1 : .32 + .3 * p.z) * tw; }
+      if (!p.on) { if (p.y < -20) p.y += H + 40; else if (p.y > H + 20) p.y -= H + 40; if (p.x < -20) p.x += W + 40; else if (p.x > W + 20) p.x -= W + 40; }
+      if (p.y < -30 || p.y > H + 30) continue;
+      if (!p.on && !p.red && (i % 3)) continue;   // only a third of the free particles are drawn: a light, clean field
+
+      var spr, size, a;
+      if (p.red) { spr = SPR.red; size = 7; a = 1; }
+      else if (p.on) {
+        spr = p.kind === 'soft' ? SPR.mid : SPR.sharp;
+        var lg = shape && shape.name === 'logo' ? 1.25 : 1;
+        size = (p.kind === 'soft' ? 4.8 : p.kind === 'mid' ? 3.4 : 2.6) * lg;
+        a = p.kind === 'soft' ? .6 : .95;
+      } else {
+        spr = p.kind === 'soft' ? SPR.soft : p.kind === 'mid' ? SPR.mid : SPR.sharp;
+        size = p.kind === 'soft' ? 7 + 6 * p.z : 1.4 + 1.6 * p.z;
+        a = p.kind === 'soft' ? .035 : .12 + .22 * p.z;
+      }
       var ctx = p.layer ? cf : cb;
-      ctx.globalAlpha = a; ctx.drawImage(spr, p.x - size / 2, p.y - size / 2, size, size);
+      ctx.globalAlpha = p.layer ? a * .6 : a;
+      ctx.drawImage(spr, p.x - size / 2, p.y - size / 2, size, size);
     }
     cb.globalAlpha = cf.globalAlpha = 1;
     requestAnimationFrame(frame);
@@ -286,8 +330,8 @@
     var r = shape && shape.anchor ? shape.anchor.getBoundingClientRect() : null;
     parts.forEach(function (p) {
       var x, y; if (p.on && r) { var t = target(p, 0, r); x = t[0]; y = t[1]; } else { x = p.fx; y = p.fy; }
-      var spr = p.red ? SPR.red : SPR[p.kind], size = p.red ? 18 : p.on ? (p.kind === 'bokeh' ? 20 : p.kind === 'mid' ? 9 : 5) : 3;
-      cb.globalAlpha = p.red ? 1 : p.on ? .9 : .3; cb.drawImage(spr, x - size / 2, y - size / 2, size, size);
+      var spr = p.red ? SPR.red : p.on ? SPR.sharp : SPR.mid, size = p.red ? 7 : p.on ? 2.6 : 2;
+      cb.globalAlpha = p.red ? 1 : p.on ? .9 : .2; cb.drawImage(spr, x - size / 2, y - size / 2, size, size);
     });
     cb.globalAlpha = 1;
   }
